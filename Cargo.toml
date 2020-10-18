@@ -1,0 +1,51 @@
+[package]
+name = "lbm-blood-1d"
+version = "1.0.0"
+authors = ["Martin Jérémie <martin.jeremie42@gmail.com>"]
+edition = "2018"
+# description = ""
+readme = "README.md"
+# repository = "https://github.com/9999years/rust-cli-template"
+license = "MIT"  # https://spdx.org/licenses/
+keywords = []  # free text
+categories = []  # https://crates.io/category_slugs
+# https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bench]]
+name = "main"
+harness = false
+
+[dependencies]
+splines = "3.4.1"
+itertools-num = "0.1.3"
+color-eyre = "0"
+chrono = "0.4.19"
+tracing = { version = "0", features = ["attributes"] }
+tracing-subscriber = { version = "0", features = ["fmt", "chrono"] }
+tracing-error = "0"
+tracing-appender = "0.1"
+structopt = "0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+csv = "1.1.3"
+ryu = "1.0"
+# config = { version = "0", features = ["hjson"] }  # also supports ini, yaml
+# termcolor = "1"
+# dialoguer = "0"
+# fuzzy-matcher = "0"  # fuzzy string-matching
+# tabwriter = "1"  # tab-aligned printing
+# regex = "1"
+# cmd_lib = "0"
+# float-cmp = "0"
+# maplit = "1"
+# auto_enums = "0"  # return multiple types from the same fn
+# derive_builder = "0"
+# wyz = "0"  # myrrlyn's utils
+# derivative = "2"
+# derive_more = "0"
+# fasteval = "0"  # calculator language
+
+[dev-dependencies]
+pretty_assertions = "0"
+indoc = "1"
+criterion = "0"

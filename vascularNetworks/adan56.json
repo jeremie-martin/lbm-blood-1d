@@ -1,0 +1,1351 @@
+{
+  "dx": 0.01,
+  "gamma": 2,
+  "inflow_path": "adan56_benchmark_inflow.csv",
+  "my": 4e-3,
+  "rho": 1040,
+  "total_time": 1,
+  "vessels": [
+    {
+      "id": 1,
+      "name": "aortic_arch_I",
+      "root": true,
+      "length": 0.074413765495,
+      "radius_proximal": 0.01595,
+      "radius_distal": 0.012952439865,
+      "as": 0.000799229025055,
+      "ps": 10000,
+      "wall_thickness": 0.00176941123144,
+      "young_modulus": 225000,
+      "children": [
+        2,
+        3
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 2,
+      "name": "brachiocephalic_trunk",
+      "length": 0.047351277755,
+      "radius_proximal": 0.00672809,
+      "radius_distal": 0.00615874,
+      "as": 0.000142211087412,
+      "ps": 10000,
+      "wall_thickness": 0.000889407920769,
+      "young_modulus": 225000,
+      "children": [
+        4,
+        5
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 3,
+      "name": "aortic_arch_II",
+      "length": 0.009603836388,
+      "radius_proximal": 0.012952439865,
+      "radius_distal": 0.012565574929,
+      "as": 0.000527051485795,
+      "ps": 10000,
+      "wall_thickness": 0.00148969968654,
+      "young_modulus": 225000,
+      "children": [
+        17,
+        18
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 4,
+      "name": "subclavian_R_I",
+      "length": 0.015740629027,
+      "radius_proximal": 0.00489563,
+      "radius_distal": 0.004177347704,
+      "as": 7.52951577604e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000729372080346,
+      "young_modulus": 225000,
+      "children": [
+        6,
+        7
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 5,
+      "name": "common_carotid_R",
+      "length": 0.081219358067,
+      "radius_proximal": 0.00447559,
+      "radius_distal": 0.00332624,
+      "as": 6.29289466571e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000694411848245,
+      "young_modulus": 225000,
+      "children": [
+        15,
+        16
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 6,
+      "name": "vertebral_R",
+      "root": false,
+      "length": 0.204453188261,
+      "radius_proximal": 0.00133527,
+      "radius_distal": 0.00133527,
+      "as": 5.60128997021e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000364731497417,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 3.128659004e-11,
+          "rc": 7241705849.9,
+          "z": 1810426462.5
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "subclavian_R_II",
+      "length": 0.041118782084,
+      "radius_proximal": 0.004177347704,
+      "radius_distal": 0.002301,
+      "as": 5.48215264355e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000669725275119,
+      "young_modulus": 225000,
+      "children": [
+        8
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 8,
+      "name": "axillary_R",
+      "length": 0.12000204811,
+      "radius_proximal": 0.002301,
+      "radius_distal": 0.002077,
+      "as": 1.66334796053e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000498515549897,
+      "young_modulus": 225000,
+      "children": [
+        9
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 9,
+      "name": "brachial_R",
+      "length": 0.223108204635,
+      "radius_proximal": 0.002077,
+      "radius_distal": 0.00182827,
+      "as": 1.35526076545e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000472460440668,
+      "young_modulus": 225000,
+      "children": [
+        10,
+        11
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 10,
+      "name": "radial_R",
+      "root": false,
+      "length": 0.300885766109,
+      "radius_proximal": 0.001378,
+      "radius_distal": 0.001378,
+      "as": 5.96552002442e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000372117282761,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 4.90883154e-11,
+          "rc": 4615523680.2,
+          "z": 1153880920
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "ulnar_R_I",
+      "length": 0.029756240754,
+      "radius_proximal": 0.001408,
+      "radius_distal": 0.001408,
+      "as": 6.22809433841e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000377198814147,
+      "young_modulus": 225000,
+      "children": [
+        12,
+        13
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 12,
+      "name": "common_interosseous_R",
+      "length": 0.016266065799,
+      "radius_proximal": 0.000959,
+      "radius_distal": 0.000959,
+      "as": 2.88926307325e-06,
+      "ps": 10000,
+      "wall_thickness": 0.00029113650606,
+      "young_modulus": 225000,
+      "children": [
+        14
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 13,
+      "name": "ulnar_R_II",
+      "root": false,
+      "length": 0.239261629581,
+      "radius_proximal": 0.001408,
+      "radius_distal": 0.001408,
+      "as": 6.22809433841e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000377198814147,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 4.821160687e-11,
+          "rc": 4699455106.8,
+          "z": 1174863776.7
+        }
+      }
+    },
+    {
+      "id": 14,
+      "name": "posterior_interosseous_R",
+      "root": false,
+      "length": 0.230561368515,
+      "radius_proximal": 0.000676,
+      "radius_distal": 0.000676,
+      "as": 1.43563244447e-06,
+      "ps": 10000,
+      "wall_thickness": 0.0002234378147,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.184657059e-11,
+          "rc": 19125221121.3,
+          "z": 4781305280.3
+        }
+      }
+    },
+    {
+      "id": 15,
+      "name": "external_carotid_R",
+      "root": false,
+      "length": 0.06089687742,
+      "radius_proximal": 0.00226547,
+      "radius_distal": 0.00226547,
+      "as": 1.61237666302e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000494528855066,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 6.031649393e-11,
+          "rc": 3756323807.7,
+          "z": 939080951.9
+        }
+      }
+    },
+    {
+      "id": 16,
+      "name": "internal_carotid_R",
+      "root": false,
+      "length": 0.132109962786,
+      "radius_proximal": 0.00276538,
+      "radius_distal": 0.00276538,
+      "as": 2.40247848915e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000546614651895,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 9.833420276e-11,
+          "rc": 2304063853.4,
+          "z": 576015963.3
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "common_carotid_L",
+      "length": 0.121319039241,
+      "radius_proximal": 0.00447559,
+      "radius_distal": 0.00332624,
+      "as": 6.29289466571e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000694411848245,
+      "young_modulus": 225000,
+      "children": [
+        19,
+        20
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 18,
+      "name": "aortic_arch_III",
+      "length": 0.006978531332,
+      "radius_proximal": 0.012565574929,
+      "radius_distal": 0.012284463405,
+      "as": 0.000496037604076,
+      "ps": 10000,
+      "wall_thickness": 0.00145251780977,
+      "young_modulus": 225000,
+      "children": [
+        21,
+        22
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 19,
+      "name": "external_carotid_L",
+      "root": false,
+      "length": 0.060897059943,
+      "radius_proximal": 0.00226547,
+      "radius_distal": 0.00226547,
+      "as": 1.61237666302e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000494528855066,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 6.010467524e-11,
+          "rc": 3769561706,
+          "z": 942390426.5
+        }
+      }
+    },
+    {
+      "id": 20,
+      "name": "internal_carotid_L",
+      "root": false,
+      "length": 0.132110383494,
+      "radius_proximal": 0.00276538,
+      "radius_distal": 0.00276538,
+      "as": 2.40247848915e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000546614651895,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 9.800685746e-11,
+          "rc": 2311759483.1,
+          "z": 577939870.8
+        }
+      }
+    },
+    {
+      "id": 21,
+      "name": "subclavian_L_I",
+      "length": 0.049384125272,
+      "radius_proximal": 0.00489563,
+      "radius_distal": 0.00347983539,
+      "as": 7.52951577604e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000729372080346,
+      "young_modulus": 225000,
+      "children": [
+        23,
+        24
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 22,
+      "name": "aortic_arch_IV",
+      "length": 0.043057670133,
+      "radius_proximal": 0.012284463405,
+      "radius_distal": 0.01055,
+      "as": 0.000474091593441,
+      "ps": 10000,
+      "wall_thickness": 0.00142537598432,
+      "young_modulus": 225000,
+      "children": [
+        32
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 23,
+      "name": "vertebral_L",
+      "root": false,
+      "length": 0.204153808747,
+      "radius_proximal": 0.00133527,
+      "radius_distal": 0.00133527,
+      "as": 5.60128997021e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000364731497417,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.943515132e-11,
+          "rc": 7697201201.8,
+          "z": 1924300300.4
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "subclavian_L_II",
+      "length": 0.041118785899,
+      "radius_proximal": 0.00347983539,
+      "radius_distal": 0.002301,
+      "as": 3.80423444797e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000611239106692,
+      "young_modulus": 225000,
+      "children": [
+        25
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 25,
+      "name": "axillary_L",
+      "length": 0.120002137018,
+      "radius_proximal": 0.002301,
+      "radius_distal": 0.002077,
+      "as": 1.66334796053e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000498515549897,
+      "young_modulus": 225000,
+      "children": [
+        26
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 26,
+      "name": "brachial_L",
+      "length": 0.2231087827,
+      "radius_proximal": 0.002077,
+      "radius_distal": 0.00182827,
+      "as": 1.35526076545e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000472460440668,
+      "young_modulus": 225000,
+      "children": [
+        27,
+        28
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 27,
+      "name": "radial_L",
+      "root": false,
+      "length": 0.310884406105,
+      "radius_proximal": 0.001378,
+      "radius_distal": 0.001378,
+      "as": 5.96552002442e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000372117282761,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 4.998338199e-11,
+          "rc": 4532872189.2,
+          "z": 1133218047.3
+        }
+      }
+    },
+    {
+      "id": 28,
+      "name": "ulnar_L_I",
+      "length": 0.029755789889,
+      "radius_proximal": 0.001408,
+      "radius_distal": 0.001408,
+      "as": 6.22809433841e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000377198814147,
+      "young_modulus": 225000,
+      "children": [
+        29,
+        30
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 29,
+      "name": "common_interosseous_L",
+      "length": 0.016266062673,
+      "radius_proximal": 0.000959,
+      "radius_distal": 0.000959,
+      "as": 2.88926307325e-06,
+      "ps": 10000,
+      "wall_thickness": 0.00029113650606,
+      "young_modulus": 225000,
+      "children": [
+        31
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 30,
+      "name": "ulnar_L_II",
+      "root": false,
+      "length": 0.239262158888,
+      "radius_proximal": 0.001408,
+      "radius_distal": 0.001408,
+      "as": 6.22809433841e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000377198814147,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 4.729528075e-11,
+          "rc": 4790505068.3,
+          "z": 1197626267.1
+        }
+      }
+    },
+    {
+      "id": 31,
+      "name": "posterior_interosseous_L",
+      "root": false,
+      "length": 0.230562469653,
+      "radius_proximal": 0.000676,
+      "radius_distal": 0.000676,
+      "as": 1.43563244447e-06,
+      "ps": 10000,
+      "wall_thickness": 0.0002234378147,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.180381948e-11,
+          "rc": 19194488916.9,
+          "z": 4798622229.2
+        }
+      }
+    },
+    {
+      "id": 32,
+      "name": "thoracic_aorta_I",
+      "length": 0.009897081257,
+      "radius_proximal": 0.01055,
+      "radius_distal": 0.010363805039,
+      "as": 0.000349667116326,
+      "ps": 10000,
+      "wall_thickness": 0.00125624222426,
+      "young_modulus": 225000,
+      "children": [
+        33,
+        34
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 33,
+      "name": "posterior_intercostal_T6_R",
+      "root": false,
+      "length": 0.196881098828,
+      "radius_proximal": 0.0014,
+      "radius_distal": 0.0014,
+      "as": 6.15752160104e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000375851964397,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.27362302e-12,
+          "rc": 99650768831.3,
+          "z": 24912692207.8
+        }
+      }
+    },
+    {
+      "id": 34,
+      "name": "thoracic_aorta_II",
+      "length": 0.007880384409,
+      "radius_proximal": 0.010363805039,
+      "radius_distal": 0.010215550434,
+      "as": 0.000337433612805,
+      "ps": 10000,
+      "wall_thickness": 0.00123799070406,
+      "young_modulus": 225000,
+      "children": [
+        35,
+        36
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 35,
+      "name": "posterior_intercostal_T6_L",
+      "root": false,
+      "length": 0.178030219964,
+      "radius_proximal": 0.0014,
+      "radius_distal": 0.0014,
+      "as": 6.15752160104e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000375851964397,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.21618932e-12,
+          "rc": 102233270427,
+          "z": 25558317606.7
+        }
+      }
+    },
+    {
+      "id": 36,
+      "name": "thoracic_aorta_III",
+      "length": 0.015555917597,
+      "radius_proximal": 0.010215550434,
+      "radius_distal": 0.009922895115,
+      "as": 0.000327848663203,
+      "ps": 10000,
+      "wall_thickness": 0.00122345701313,
+      "young_modulus": 225000,
+      "children": [
+        37,
+        38
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 37,
+      "name": "posterior_intercostal_T7_R",
+      "root": false,
+      "length": 0.201560344682,
+      "radius_proximal": 0.00155,
+      "radius_distal": 0.00155,
+      "as": 7.54767635025e-06,
+      "ps": 10000,
+      "wall_thickness": 0.00040015815126,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.43691291e-12,
+          "rc": 92973483421.3,
+          "z": 23243370855.3
+        }
+      }
+    },
+    {
+      "id": 38,
+      "name": "thoracic_aorta_IV",
+      "length": 0.005327048648,
+      "radius_proximal": 0.009922895115,
+      "radius_distal": 0.009822676719,
+      "as": 0.000309333299835,
+      "ps": 10000,
+      "wall_thickness": 0.00119477547867,
+      "young_modulus": 225000,
+      "children": [
+        39,
+        40
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 39,
+      "name": "posterior_intercostal_T7_L",
+      "root": false,
+      "length": 0.185176241696,
+      "radius_proximal": 0.00155,
+      "radius_distal": 0.00155,
+      "as": 7.54767635025e-06,
+      "ps": 10000,
+      "wall_thickness": 0.00040015815126,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.41620832e-12,
+          "rc": 93770177089.7,
+          "z": 23442544272.4
+        }
+      }
+    },
+    {
+      "id": 40,
+      "name": "thoracic_aorta_V",
+      "length": 0.121560746471,
+      "radius_proximal": 0.009822676719,
+      "radius_distal": 0.00753574,
+      "as": 0.000303116497834,
+      "ps": 10000,
+      "wall_thickness": 0.0011849591927,
+      "young_modulus": 225000,
+      "children": [
+        41
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 41,
+      "name": "thoracic_aorta_VI",
+      "length": 0.003247666735,
+      "radius_proximal": 0.00753574,
+      "radius_distal": 0.007494924135,
+      "as": 0.000178402807492,
+      "ps": 10000,
+      "wall_thickness": 0.000964262290375,
+      "young_modulus": 225000,
+      "children": [
+        42,
+        43
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 42,
+      "name": "celiac_trunk",
+      "length": 0.016823833364,
+      "radius_proximal": 0.00334998,
+      "radius_distal": 0.00321246,
+      "as": 3.52561025828e-05,
+      "ps": 10000,
+      "wall_thickness": 0.00060001726775,
+      "young_modulus": 225000,
+      "children": [
+        44,
+        45
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 43,
+      "name": "abdominal_aorta_I",
+      "length": 0.013988434469,
+      "radius_proximal": 0.007494924135,
+      "radius_distal": 0.007319120983,
+      "as": 0.000176475473203,
+      "ps": 10000,
+      "wall_thickness": 0.000960425895627,
+      "young_modulus": 225000,
+      "children": [
+        48,
+        49
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 44,
+      "name": "common_hepatic",
+      "root": false,
+      "length": 0.066554552251,
+      "radius_proximal": 0.00268614,
+      "radius_distal": 0.00268614,
+      "as": 2.26676845828e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000538858809168,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.6915397489e-10,
+          "rc": 1339420384.8,
+          "z": 334855096.2
+        }
+      }
+    },
+    {
+      "id": 45,
+      "name": "splenic_I",
+      "length": 0.003948745048,
+      "radius_proximal": 0.00216682,
+      "radius_distal": 0.00216682,
+      "as": 1.4750119667e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000483179763376,
+      "young_modulus": 225000,
+      "children": [
+        46,
+        47
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 46,
+      "name": "left_gastric",
+      "root": false,
+      "length": 0.092866914136,
+      "radius_proximal": 0.00150666,
+      "radius_distal": 0.00150666,
+      "as": 7.13149183902e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000393334998862,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.64947997e-12,
+          "rc": 137357401149,
+          "z": 34339350287.2
+        }
+      }
+    },
+    {
+      "id": 47,
+      "name": "splenic_II",
+      "root": false,
+      "length": 0.064402741833,
+      "radius_proximal": 0.00216682,
+      "radius_distal": 0.00216682,
+      "as": 1.4750119667e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000483179763376,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.1966659457e-10,
+          "rc": 1893329403.6,
+          "z": 473332350.9
+        }
+      }
+    },
+    {
+      "id": 48,
+      "name": "superior_mesenteric",
+      "root": false,
+      "length": 0.216398323794,
+      "radius_proximal": 0.00392612,
+      "radius_distal": 0.00392612,
+      "as": 4.84258231474e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000648876388548,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.5959674129e-10,
+          "rc": 872770131.9,
+          "z": 218192533
+        }
+      }
+    },
+    {
+      "id": 49,
+      "name": "abdominal_aorta_II",
+      "length": 0.004319125635,
+      "radius_proximal": 0.007319120983,
+      "radius_distal": 0.00726483929,
+      "as": 0.000168293648074,
+      "ps": 10000,
+      "wall_thickness": 0.000943962387722,
+      "young_modulus": 225000,
+      "children": [
+        50,
+        51
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 50,
+      "name": "renal_L",
+      "root": false,
+      "length": 0.021836535023,
+      "radius_proximal": 0.0027089,
+      "radius_distal": 0.0027089,
+      "as": 2.30534442332e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000541102723143,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.5031672325e-10,
+          "rc": 905126430.2,
+          "z": 226281607.5
+        }
+      }
+    },
+    {
+      "id": 51,
+      "name": "abdominal_aorta_III",
+      "length": 0.011977282679,
+      "radius_proximal": 0.00726483929,
+      "radius_distal": 0.007114311792,
+      "as": 0.000165806631212,
+      "ps": 10000,
+      "wall_thickness": 0.000938899643149,
+      "young_modulus": 225000,
+      "children": [
+        52,
+        53
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 52,
+      "name": "renal_R",
+      "root": false,
+      "length": 0.037717424902,
+      "radius_proximal": 0.00309737,
+      "radius_distal": 0.00309737,
+      "as": 3.01395003213e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000577628641418,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.4947906336e-10,
+          "rc": 908165515.3,
+          "z": 227041378.8
+        }
+      }
+    },
+    {
+      "id": 53,
+      "name": "abdominal_aorta_IV",
+      "length": 0.054089376627,
+      "radius_proximal": 0.007114311792,
+      "radius_distal": 0.006434530014,
+      "as": 0.000159006787004,
+      "ps": 10000,
+      "wall_thickness": 0.000924913402466,
+      "young_modulus": 225000,
+      "children": [
+        54,
+        55
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 54,
+      "name": "inferior_mesenteric",
+      "root": false,
+      "length": 0.090238543542,
+      "radius_proximal": 0.00207748,
+      "radius_distal": 0.00207748,
+      "as": 1.35588724628e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000472518765265,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.368682545e-11,
+          "rc": 9565160287.5,
+          "z": 2391290071.9
+        }
+      }
+    },
+    {
+      "id": 55,
+      "name": "abdominal_aorta_V",
+      "length": 0.042224742038,
+      "radius_proximal": 0.006434530014,
+      "radius_distal": 0.00590386,
+      "as": 0.000130071915131,
+      "ps": 10000,
+      "wall_thickness": 0.000862814623871,
+      "young_modulus": 225000,
+      "children": [
+        56,
+        57
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 56,
+      "name": "common_iliac_R",
+      "length": 0.076428563993,
+      "radius_proximal": 0.00449868,
+      "radius_distal": 0.00409113,
+      "as": 6.35799345884e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000696325185697,
+      "young_modulus": 225000,
+      "children": [
+        58,
+        59
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 57,
+      "name": "common_iliac_L",
+      "length": 0.074038018352,
+      "radius_proximal": 0.00449868,
+      "radius_distal": 0.00409113,
+      "as": 6.35799345884e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000696325185697,
+      "young_modulus": 225000,
+      "children": [
+        68,
+        69
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 58,
+      "name": "external_iliac_R",
+      "length": 0.102210634017,
+      "radius_proximal": 0.00337758,
+      "radius_distal": 0.003189,
+      "as": 3.58394355676e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000602416394664,
+      "young_modulus": 225000,
+      "children": [
+        60
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 59,
+      "name": "internal_iliac_R",
+      "root": false,
+      "length": 0.07250942087,
+      "radius_proximal": 0.00281829,
+      "radius_distal": 0.00281829,
+      "as": 2.49529118286e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000551708863121,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.3663322092e-10,
+          "rc": 1658222507,
+          "z": 414555626.7
+        }
+      }
+    },
+    {
+      "id": 60,
+      "name": "femoral_R_I",
+      "length": 0.031591224433,
+      "radius_proximal": 0.003189,
+      "radius_distal": 0.003143724922,
+      "as": 3.19491207827e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000585848173364,
+      "young_modulus": 225000,
+      "children": [
+        61,
+        62
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 61,
+      "name": "profunda_femoris_R",
+      "root": false,
+      "length": 0.238393724757,
+      "radius_proximal": 0.00214445,
+      "radius_distal": 0.00214445,
+      "as": 1.44471347014e-05,
+      "ps": 10000,
+      "wall_thickness": 0.0004805458811,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.6528795833e-10,
+          "rc": 1370748870.1,
+          "z": 342687217.5
+        }
+      }
+    },
+    {
+      "id": 62,
+      "name": "femoral_R_II",
+      "length": 0.319285322895,
+      "radius_proximal": 0.003143724922,
+      "radius_distal": 0.00268614,
+      "as": 3.10483802551e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000581802273291,
+      "young_modulus": 225000,
+      "children": [
+        63
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 63,
+      "name": "popliteal_R_I",
+      "length": 0.132029022862,
+      "radius_proximal": 0.00268614,
+      "radius_distal": 0.00236767981,
+      "as": 2.26676845828e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000538858809168,
+      "young_modulus": 225000,
+      "children": [
+        64,
+        65
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 64,
+      "name": "anterior_tibial_R",
+      "root": false,
+      "length": 0.386215673348,
+      "radius_proximal": 0.0011663,
+      "radius_distal": 0.0011663,
+      "as": 4.27336928271e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000333698605855,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.309554151e-11,
+          "rc": 9810044163,
+          "z": 2452511040.7
+        }
+      }
+    },
+    {
+      "id": 65,
+      "name": "popliteal_R_II",
+      "length": 0.008797428856,
+      "radius_proximal": 0.00236767981,
+      "radius_distal": 0.00234646,
+      "as": 1.76114783926e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000505862906693,
+      "young_modulus": 225000,
+      "children": [
+        66
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 66,
+      "name": "tibiofibular_trunk_R",
+      "length": 0.036162676639,
+      "radius_proximal": 0.00234646,
+      "radius_distal": 0.00234646,
+      "as": 1.72972149801e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000503543241143,
+      "young_modulus": 225000,
+      "children": [
+        67
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 67,
+      "name": "posterior_tibial_R",
+      "root": false,
+      "length": 0.382884851572,
+      "radius_proximal": 0.00122936,
+      "radius_distal": 0.00122936,
+      "as": 4.74797068894e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000345635860991,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.677305842e-11,
+          "rc": 8462547633.2,
+          "z": 2115636908.3
+        }
+      }
+    },
+    {
+      "id": 68,
+      "name": "external_iliac_L",
+      "length": 0.102210679305,
+      "radius_proximal": 0.00337758,
+      "radius_distal": 0.003189,
+      "as": 3.58394355676e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000602416394664,
+      "young_modulus": 225000,
+      "children": [
+        70
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 69,
+      "name": "internal_iliac_L",
+      "root": false,
+      "length": 0.072509392407,
+      "radius_proximal": 0.00281829,
+      "radius_distal": 0.00281829,
+      "as": 2.49529118286e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000551708863121,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.3622524035e-10,
+          "rc": 1663188712.7,
+          "z": 415797178.2
+        }
+      }
+    },
+    {
+      "id": 70,
+      "name": "femoral_L_I",
+      "length": 0.031591223553,
+      "radius_proximal": 0.003189,
+      "radius_distal": 0.003143724923,
+      "as": 3.19491207827e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000585848173364,
+      "young_modulus": 225000,
+      "children": [
+        71,
+        72
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 71,
+      "name": "profunda_femoris_L",
+      "root": false,
+      "length": 0.238393754787,
+      "radius_proximal": 0.00214445,
+      "radius_distal": 0.00214445,
+      "as": 1.44471347014e-05,
+      "ps": 10000,
+      "wall_thickness": 0.0004805458811,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.652e-10,
+          "rc": 1371478494,
+          "z": 342869623.5
+        }
+      }
+    },
+    {
+      "id": 72,
+      "name": "femoral_L_II",
+      "length": 0.319285318272,
+      "radius_proximal": 0.003143724923,
+      "radius_distal": 0.00268614,
+      "as": 3.10483802749e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000581802273381,
+      "young_modulus": 225000,
+      "children": [
+        73
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 73,
+      "name": "popliteal_L_I",
+      "length": 0.132028085435,
+      "radius_proximal": 0.00268614,
+      "radius_distal": 0.002367679847,
+      "as": 2.26676845828e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000538858809168,
+      "young_modulus": 225000,
+      "children": [
+        74,
+        75
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 74,
+      "name": "anterior_tibial_L",
+      "root": false,
+      "length": 0.386216405775,
+      "radius_proximal": 0.0011663,
+      "radius_distal": 0.0011663,
+      "as": 4.27336928271e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000333698605855,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.308827861e-11,
+          "rc": 9813130116.1,
+          "z": 2453282529
+        }
+      }
+    },
+    {
+      "id": 75,
+      "name": "popliteal_L_II",
+      "length": 0.008797382358,
+      "radius_proximal": 0.002367679847,
+      "radius_distal": 0.00234646,
+      "as": 1.7611478943e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000505862910723,
+      "young_modulus": 225000,
+      "children": [
+        76
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 76,
+      "name": "tibiofibular_trunk_L",
+      "length": 0.03616364034,
+      "radius_proximal": 0.00234646,
+      "radius_distal": 0.00234646,
+      "as": 1.72972149801e-05,
+      "ps": 10000,
+      "wall_thickness": 0.000503543241143,
+      "young_modulus": 225000,
+      "children": [
+        77
+      ],
+      "outflow": "non_reflective"
+    },
+    {
+      "id": 77,
+      "name": "posterior_tibial_L",
+      "root": false,
+      "length": 0.382884647627,
+      "radius_proximal": 0.00122936,
+      "radius_distal": 0.00122936,
+      "as": 4.74797068894e-06,
+      "ps": 10000,
+      "wall_thickness": 0.000345635860991,
+      "young_modulus": 225000,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 2.676139423e-11,
+          "rc": 8466236107.9,
+          "z": 2116559027
+        }
+      }
+    }
+  ]
+}
