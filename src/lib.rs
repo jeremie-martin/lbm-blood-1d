@@ -1,4 +1,5 @@
-#![allow(unused_imports)]
+#![warn(missing_docs)]
+#![warn(missing_doc_code_examples)]
 
 pub mod logging;
 pub mod settings;

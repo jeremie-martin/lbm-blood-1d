@@ -1,10 +1,16 @@
+//! Initialize a terminal and a log file [Subscribers](tracing_subscriber::fmt::Subscriber) with a custom [FormatTime](tracing_subscriber::fmt::time::FormatTime).
+//!
+//! Both the `stdio` and log file [Subscribers](tracing_subscriber::fmt::Subscriber) will write the
+//! - Absolute time, formatted with `"%Y-%m-%d %H:%M:%S"`
+//! - Elapsed number of seconds since the beginning of the execution
+
 use crate::settings::*;
 use std::fmt;
 use std::time::Instant;
 use tracing::*;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct TimeLog {
+struct TimeLog {
     epoch: Instant,
     format: String,
 }
@@ -32,6 +38,18 @@ impl tracing_subscriber::fmt::time::FormatTime for TimeLog {
     }
 }
 
+/// Install [subscribers](tracing_subscriber::fmt::Subscriber) given the command-line arguments
+///
+/// Returns the [guards](tracing_appender::non_blocking::WorkerGuard) that we create to keep them alive,
+/// which is needed to record events outside of this function
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// tracing_init(Settings { tracing_filter: "info", logs_path: "logs/" })
+/// ```
 pub fn tracing_init(args: &Settings) -> Vec<impl Drop> {
     use std::fs;
     use tracing_subscriber::prelude::*;
