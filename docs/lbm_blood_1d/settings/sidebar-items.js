@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Settings","Structure used by (structopt)[structopt] to parse the command line arguments"]]});

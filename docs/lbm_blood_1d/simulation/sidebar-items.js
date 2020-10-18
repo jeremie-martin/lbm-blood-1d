@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Simulation","Contains the simulation parameters and the vessels."]],"type":[["InletRaw","Represent the couple `(time, volumetric_flow_rate)`"]]});

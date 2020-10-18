@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["logging","Initialize a terminal and a log file Subscribers with a custom FormatTime."],["settings","Defines the command line arguments"],["simulation","Initializes and runs a simulation"],["vessels","Initializes a vessels"]]});

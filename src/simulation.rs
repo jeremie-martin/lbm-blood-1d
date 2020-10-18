@@ -15,7 +15,7 @@ pub type InletRaw = (f64, f64);
 pub struct Simulation {
     /// Space step [m]
     pub dx: f64,
-    /// Time step [m]
+    /// Time step, depends on dx [m]
     #[serde(skip)]
     pub dt: f64,
     /// Wall visco-elasticity (Pa.s.m^-1)
@@ -43,6 +43,8 @@ impl Simulation {
 
         let inlet = Simulation::read_inlet(&simulation.inflow_path);
         info!("Unmarshalled {}", simulation.inflow_path);
+
+        simulation.dt = simulation.dx * simulation.dx;
 
         simulation.inflow = simulation.standardize_inlet(&inlet);
         info!("Uniformly interpolated inflow");

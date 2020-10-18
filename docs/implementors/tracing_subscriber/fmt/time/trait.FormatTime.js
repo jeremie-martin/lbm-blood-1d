@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["lbm_blood_1d"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/tracing-subscriber/0.2.13/tracing_subscriber/fmt/time/trait.FormatTime.html\" title=\"trait tracing_subscriber::fmt::time::FormatTime\">FormatTime</a> for <a class=\"struct\" href=\"lbm_blood_1d/logging/struct.TimeLog.html\" title=\"struct lbm_blood_1d::logging::TimeLog\">TimeLog</a>","synthetic":false,"types":["lbm_blood_1d::logging::TimeLog"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["lbm_blood_1d"] = [{"text":"impl StructOpt for <a class=\"struct\" href=\"lbm_blood_1d/settings/struct.Settings.html\" title=\"struct lbm_blood_1d::settings::Settings\">Settings</a>","synthetic":false,"types":["lbm_blood_1d::settings::Settings"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
