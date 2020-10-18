@@ -1,3 +1,5 @@
+//! Initializes and runs a simulation
+
 use crate::vessels::*;
 use itertools_num::linspace;
 use serde::{Deserialize, Serialize};
@@ -5,22 +7,40 @@ use splines::{Interpolation, Key, Spline};
 use std::fs::File;
 use tracing::{event, info, instrument, span, warn, Level};
 
+/// Represent the couple `(time, volumetric_flow_rate)`
+pub type InletRaw = (f64, f64);
+
+/// Contains the simulation parameters and the vessels.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Simulation {
+    /// Space step [m]
     pub dx: f64,
+    /// Time step [m]
+    #[serde(skip)]
+    pub dt: f64,
+    /// Wall visco-elasticity (Pa.s.m^-1)
     pub gamma: f64,
+    /// Blood dynamic viscosity [Pa.s = kg.m-1.s-1]
+    pub mu: f64,
+    /// Blood density [kg.m^-3]
+    pub rho: f64,
+    /// Time of the simulation
+    pub total_time: f64,
+    /// [Vessels](crate::Vessel)
+    pub vessels: Vec<Vessel>,
+    /// Path to the inlet file
     pub inflow_path: String,
+    /// Uniformly sampled inflow (w.r.t. dt)
     #[serde(skip)]
     pub inflow: Vec<f64>,
-    pub my: f64,
-    pub rho: f64,
-    pub total_time: f64,
-    pub vessels: Vec<Vessel>,
 }
 
 impl Simulation {
+    /// Constructor
+    ///
+    /// Returns a structure ready to be simulated, given the `path` to a .json describing both the simulation parameters and the cardiovascular network.
     pub fn new(path: &str) -> Simulation {
-        let mut simulation = Simulation::read_json(path);
+        let mut simulation = Simulation::read_json(&path.to_string());
         info!("Unmarshalled {}", path);
 
         let inlet = Simulation::read_inlet(&simulation.inflow_path);
@@ -32,12 +52,14 @@ impl Simulation {
         simulation
     }
 
-    pub fn read_json(path: &str) -> Simulation {
+    /// Unmarshall a json file describing both the simulation parameters and the cardiovascular network.
+    pub fn read_json(path: &String) -> Simulation {
         let json = File::open(path).expect("File not found");
         serde_json::from_reader(&json).unwrap()
     }
 
-    pub fn read_inlet(path: &String) -> Vec<(f64, f64)> {
+    /// Unmarshalls an inlet file
+    pub fn read_inlet(path: &String) -> Vec<InletRaw> {
         let mut rdr = csv::ReaderBuilder::new()
             .has_headers(false)
             .delimiter(b' ')
@@ -47,7 +69,14 @@ impl Simulation {
         rdr.deserialize().map(|r| r.unwrap()).collect()
     }
 
-    pub fn standardize_inlet(inlet: &Vec<(f64, f64)>) -> Vec<f64> {
+    /// Transforms a vector of points `(x, y)` to a vector of evenly spaced `y`, w.r.t. `dt`.
+    ///
+    /// An inlet file defines the volumetric flow rate of the input heart wave for a given time
+    /// `T`. This method interpolates the values at `T / dt` points. We now can get rid of the
+    /// axis.
+    ///
+    /// Returns a vector of uniformly sampled volumetric flow rate,
+    pub fn standardize_inlet(inlet: &Vec<InletRaw>) -> Vec<f64> {
         let keys = inlet
             .iter()
             .map(|(x, y)| Key::new(*x, *y, Interpolation::Linear))
