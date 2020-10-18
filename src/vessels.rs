@@ -44,9 +44,9 @@ pub enum Outflow {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Wk3 {
     /// Resistance of blood due to blood viscosity
-    pub r: f64,
+    pub r1: f64,
     /// Blood inertance
-    pub l: f64,
+    pub r2: f64,
     /// Compliance of the artery
     pub c: f64,
 }
