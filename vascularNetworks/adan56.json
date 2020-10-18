@@ -2,7 +2,7 @@
   "dx": 0.01,
   "gamma": 2,
   "inflow_path": "adan56_benchmark_inflow.csv",
-  "my": 4e-3,
+  "mu": 4e-3,
   "rho": 1040,
   "total_time": 1,
   "vessels": [

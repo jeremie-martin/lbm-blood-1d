@@ -628,3 +628,16 @@
 [2m2020-10-18 20:39:12 (+000.036759s)[0m [32m INFO[0m Execution started.
 [2m2020-10-18 20:39:12 (+000.037548s)[0m [32m INFO[0m Unmarshalled vascularNetworks/bifur.json
 [2m2020-10-18 20:39:12 (+000.038637s)[0m [32m INFO[0m Unmarshalled vascularNetworks/adan56_inlet.dat
+[2m2020-10-18 22:18:58 (+000.036453s)[0m [32m INFO[0m Execution started.
+[2m2020-10-18 22:18:58 (+000.037457s)[0m [32m INFO[0m Unmarshalled vascularNetworks/bifur.json
+[2m2020-10-18 22:18:58 (+000.038525s)[0m [32m INFO[0m Unmarshalled vascularNetworks/adan56_inlet.dat
+[2m2020-10-18 22:18:58 (+000.038718s)[0m [32m INFO[0m Uniformly interpolated inflow
+[2m2020-10-18 22:36:26 (+000.036532s)[0m [32m INFO[0m Execution started.
+[2m2020-10-18 22:36:26 (+000.037319s)[0m [32m INFO[0m Unmarshalled vascularNetworks/bifur.json
+[2m2020-10-18 22:36:26 (+000.038395s)[0m [32m INFO[0m Unmarshalled vascularNetworks/adan56_inlet.dat
+[2m2020-10-18 22:36:26 (+000.038600s)[0m [32m INFO[0m Uniformly interpolated inflow
+[2m2020-10-18 22:37:30 (+000.036185s)[0m [32m INFO[0m Execution started.
+[2m2020-10-18 22:38:23 (+000.036822s)[0m [32m INFO[0m Execution started.
+[2m2020-10-18 22:38:23 (+000.037578s)[0m [32m INFO[0m Unmarshalled vascularNetworks/bifur.json
+[2m2020-10-18 22:38:23 (+000.038678s)[0m [32m INFO[0m Unmarshalled vascularNetworks/adan56_inlet.dat
+[2m2020-10-18 22:38:23 (+000.038885s)[0m [32m INFO[0m Uniformly interpolated inflow

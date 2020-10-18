@@ -2,7 +2,7 @@
   "dx": 0.01,
   "gamma": 2,
   "inflow_path": "vascularNetworks/adan56_inlet.dat",
-  "my": 0.004,
+  "mu": 0.004,
   "rho": 1050,
   "total_time": 8,
   "vessels": [
