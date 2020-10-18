@@ -1,5 +1,8 @@
+//! Defines the command line arguments
+
 use structopt::StructOpt;
 
+/// Structure used by (structopt)[structopt] to parse the command line arguments
 #[derive(Debug, StructOpt)]
 pub struct Settings {
     /// Tracing filter.

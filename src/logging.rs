@@ -38,7 +38,7 @@ impl tracing_subscriber::fmt::time::FormatTime for TimeLog {
     }
 }
 
-/// Install [subscribers](tracing_subscriber::fmt::Subscriber) given the command-line arguments
+/// Installs [subscribers](tracing_subscriber::fmt::Subscriber) given the command line arguments
 ///
 /// Returns the [guards](tracing_appender::non_blocking::WorkerGuard) that we create to keep them alive,
 /// which is needed to record events outside of this function
