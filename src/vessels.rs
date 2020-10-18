@@ -1,55 +1,52 @@
+//! Initializes a vessels
+
 use serde::{Deserialize, Serialize};
 use tracing::{event, info, instrument, span, warn, Level};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Simulation {
-    pub dx: f64,
-    pub gamma: f64,
-    pub inflow_path: String,
-    pub my: f64,
-    pub rho: f64,
-    pub total_time: f64,
-    pub vessels: Vec<Vessel>,
-}
-
+/// Represents a vessel
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Vessel {
+    /// `id`-th vessel in the vascular network
     pub id: i64,
+    /// Name vessel in the vascular network
     pub name: String,
-    pub root: Option<bool>,
+    /// Inflow boundary condition
+    #[serde(rename = "root")]
+    pub is_inlet: Option<bool>,
+    /// Length of the vessel [m]
     pub length: f64,
+    /// Inlet radius [m]
     pub radius_proximal: f64,
+    /// Outlet radius [m]
     pub radius_distal: f64,
-    #[serde(rename = "as")]
-    pub _as: f64,
-    pub ps: f64,
+    /// Wall thickness of the vessel [m]
     pub wall_thickness: f64,
+    /// Young's modulus [Pa]
     pub young_modulus: f64,
+    /// Vector of childrens' ids
     pub children: Vec<i64>,
-    pub outflow: OutflowUnion,
+    /// Kind of outflow (`None` if the vessel has children)
+    pub outflow: Option<Outflow>,
 }
 
+/// Kind of outflow
 #[derive(Debug, Serialize, Deserialize)]
-pub struct OutflowClass {
-    pub wk3: Wk3,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Wk3 {
-    pub c: f64,
-    pub rc: f64,
-    pub z: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum OutflowUnion {
-    Enum(OutflowEnum),
-    OutflowClass(OutflowClass),
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum OutflowEnum {
+pub enum Outflow {
+    /// Non-reflective i.e. "as if the vessel goes on infinitely"
     #[serde(rename = "non_reflective")]
     NonReflective,
+    /// WK3-lumped parameter model
+    #[serde(rename = "wk3")]
+    WK3(Wk3),
+}
+
+/// Three-element Windkessel model
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Wk3 {
+    /// Resistance of blood due to blood viscosity
+    pub r: f64,
+    /// Blood inertance
+    pub l: f64,
+    /// Compliance of the artery
+    pub c: f64,
 }
