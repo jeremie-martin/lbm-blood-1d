@@ -4,6 +4,7 @@ use crate::boundary_conditions::Inlet;
 use crate::simulation_parsing::*;
 use crate::vessels::*;
 use itertools_num::linspace;
+use replace_with::replace_with;
 use serde::{Deserialize, Serialize};
 use splines::{Interpolation, Key, Spline};
 use std::fs::File;
@@ -66,9 +67,32 @@ impl Simulation {
 
         info!("Precomputed constants");
         info!(
-            "dt = {:.4e}, c = {:.4e}, cs = {:.4e}, cs2 = {:.4e}, nu = {:.4e}, tau = {:.4e}, omega = {:.4e}",
-            dt, c, cs, cs2, nu, tau, omega
+            ">dt = {:.4e}, c = {:.4e}, cs = {:.4e}, cs2 = {:.4e}",
+            dt, c, cs, cs2
         );
+        info!(">nu = {:.4e}, tau = {:.4e}, omega = {:.4e}", nu, tau, omega);
+
+        let mut vessels: Vec<Vessel> = parse.vessels;
+
+        for v in &mut vessels {
+            v.init(dx, dt, rho);
+
+            for i in 0..v.x_last {
+                v.compute_F(cs2, i);
+            }
+
+            for i in 0..v.x_last {
+                v.cells.u[i] += ((dt / 2.0) * v.cells.F[i]) / v.cells.A[i];
+                let feq = Simulation::computeFEQ(v.cells.A[i], v.cells.u[i], c);
+
+                v.cells.f0[i] = feq.0;
+                v.cells.f1[i] = feq.1;
+                v.cells.f2[i] = feq.2;
+                v.cells.A[i] = v.cells.f0[i] + v.cells.f1[i] + v.cells.f2[i];
+            }
+        }
+
+        info!("Initialized vessels");
 
         Simulation {
             dx,
@@ -79,8 +103,19 @@ impl Simulation {
             cs2,
             omega,
             total_time,
+            vessels,
             inlet: Inlet::new(&inlet_data),
-            vessels: parse.vessels,
         }
+    }
+
+    pub fn computeFEQ(A: f64, u: f64, c: f64) -> (f64, f64, f64) {
+        let uc = u / c;
+        let uc2 = uc * uc;
+
+        (
+            (1.0 / 3.0) * A * (2.0 - 3.0 * uc2),
+            (1.0 / 6.0) * A * (1.0 - 3.0 * uc + 3.0 * uc2),
+            (1.0 / 6.0) * A * (1.0 + 3.0 * uc + 3.0 * uc2),
+        )
     }
 }

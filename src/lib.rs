@@ -8,6 +8,6 @@ pub mod boundary_conditions;
 pub mod logging;
 pub mod settings;
 pub mod simulation;
-pub mod simulation_constants;
 pub mod simulation_parsing;
 pub mod vessels;
+pub mod vessels_cells;

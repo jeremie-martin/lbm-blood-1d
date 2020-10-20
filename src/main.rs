@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate csv;
 extern crate itertools_num;
+extern crate replace_with;
 extern crate ryu; // float to String scientific notation
 extern crate serde;
 extern crate serde_json;

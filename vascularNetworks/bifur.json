@@ -9,6 +9,7 @@
     {
       "id": 1,
       "name": "A",
+      "root": true,
       "length": 6,
       "radius_proximal": 0.007581,
       "radius_distal": 0.007581,
@@ -25,7 +26,7 @@
     {
       "id": 2,
       "name": "B",
-      "root": true,
+      "root": false,
       "length": 6,
       "radius_proximal": 0.0070605765,
       "radius_distal": 0.0053605765,

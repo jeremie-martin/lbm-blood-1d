@@ -16,6 +16,7 @@ name = "main"
 harness = false
 
 [dependencies]
+replace_with = "0.1.7"
 splines = "3.4.1"
 itertools-num = "0.1.3"
 color-eyre = "0"
