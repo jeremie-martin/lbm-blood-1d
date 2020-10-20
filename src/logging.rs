@@ -47,7 +47,7 @@ impl tracing_subscriber::fmt::time::FormatTime for TimeLog {
 ///
 /// Basic usage:
 ///
-/// ```
+/// ```ignore
 /// tracing_init(Settings { tracing_filter: "info", logs_path: "logs/" })
 /// ```
 pub fn tracing_init(args: &Settings) -> Vec<impl Drop> {

@@ -1,7 +1,7 @@
 {
-  "dx": 0.01,
+  "dx": 0.001,
   "gamma": 2,
-  "inflow_path": "vascularNetworks/adan56_inlet.dat",
+  "inlet_path": "vascularNetworks/adan56_inlet.dat",
   "mu": 0.004,
   "rho": 1050,
   "total_time": 8,
