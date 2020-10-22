@@ -86,67 +86,6 @@ impl Vessel {
         }
     }
 
-    pub fn computeFEQ(&self, A: f64, u: f64) -> Populations {
-        let uc = u / self.consts.c;
-        let uc2 = uc * uc;
-
-        (
-            (1.0 / 3.0) * A * (2.0 - 3.0 * uc2),
-            (1.0 / 6.0) * A * (1.0 - 3.0 * uc + 3.0 * uc2),
-            (1.0 / 6.0) * A * (1.0 + 3.0 * uc + 3.0 * uc2),
-        )
-    }
-
-    pub fn computeEQ(&self, i: usize) -> Populations {
-        let uc = self.cells.u[i] / self.consts.c;
-        let uc2 = uc * uc;
-
-        (
-            (1.0 / 3.0) * self.cells.A[i] * (2.0 - 3.0 * uc2),
-            (1.0 / 6.0) * self.cells.A[i] * (1.0 - 3.0 * uc + 3.0 * uc2),
-            (1.0 / 6.0) * self.cells.A[i] * (1.0 + 3.0 * uc + 3.0 * uc2),
-        )
-    }
-
-    pub fn update_velocity(&self, i: usize) -> f64 {
-        self.cells.u[i] + ((self.consts.dt / 2.0) * self.cells.F[i]) / self.cells.A[i]
-    }
-
-    pub fn update_area(&self, i: usize) -> f64 {
-        self.cells.f[i].0 + self.cells.f[i].1 + self.cells.f[i].2
-    }
-
-    pub fn populations_init(&mut self, i: usize) {
-        self.cells.u[i] += ((self.consts.dt / 2.0) * self.cells.F[i]) / self.cells.A[i];
-
-        self.cells.f[i] = self.computeFEQ(self.cells.A[i], self.cells.u[i]);
-
-        // self.cells.f0[i] = feq.0;
-        // self.cells.f1[i] = feq.1;
-        // self.cells.f2[i] = feq.2;
-        self.cells.A[i] = self.cells.f[i].0 + self.cells.f[i].1 + self.cells.f[i].2;
-    }
-
-    pub fn compute_F2(&self, i: usize) -> f64 {
-        let first = self.cells.A[i] / self.consts.rho;
-        let P_derivative = (self.cells.beta[i]) / (2.0 * (self.cells.A[i] * self.cells.A0[i]).sqrt());
-
-        let H_derivative = (self.cells.A[i] / self.consts.rho) * P_derivative;
-
-        let A_derivative = match i {
-            // Derivative with i and i+1
-            0 => (self.cells.A[i + 1] - self.cells.A[i]) / self.consts.dx,
-
-            // Derivative with i-1 and i-1
-            i if (i == self.x_last) => (self.cells.A[i] - self.cells.A[i - 1]) / self.consts.dx,
-
-            // Derivative with i-1, i and i+1
-            _ => (self.cells.A[i + 1] - self.cells.A[i - 1]) / (2.0 * self.consts.dx),
-        };
-
-        A_derivative * ((self.consts.cs2) - (H_derivative))
-    }
-
     pub fn compute_F(&mut self, i: usize) {
         let first = self.cells.A[i] / self.consts.rho;
         let P_derivative = (self.cells.beta[i]) / (2.0 * (self.cells.A[i] * self.cells.A0[i]).sqrt());
@@ -165,9 +104,5 @@ impl Vessel {
         };
 
         self.cells.F[i] = A_derivative * ((self.consts.cs2) - (H_derivative));
-    }
-
-    pub fn compute_all_F(&mut self, cs2: f64) {
-        (0..self.x_last).for_each(|i| self.compute_F(i));
     }
 }

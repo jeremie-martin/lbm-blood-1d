@@ -2,6 +2,7 @@
 
 use crate::boundary_conditions::Inlet;
 use crate::constants::Constants;
+use crate::lbm_algorithm::*;
 use crate::simulation_parsing::*;
 use crate::vessels::*;
 use itertools_num::linspace;
@@ -13,7 +14,7 @@ use tracing::{event, info, instrument, span, warn, Level};
 
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug)]
-pub struct Simulation {
+pub struct Simulation<T: Algorithm> {
     /// [Constants](crate::Constants)
     pub consts: Constants,
     /// Duration of the simulation
@@ -22,11 +23,12 @@ pub struct Simulation {
     pub vessels: Vec<Vessel>,
     /// Uniformly sampled inflow (w.r.t. dt)
     pub inlet: Inlet,
+    pub algo: T,
 }
 
-impl Simulation {
+impl<T: Algorithm> Simulation<T> {
     /// Returns a structure ready to be simulated, given the `path` to a .json describing both the simulation parameters and the cardiovascular network.
-    pub fn new(path: &str) -> Simulation {
+    pub fn new(path: &str) -> Simulation<T> {
         let mut parse = SimulationParsing::read_json(&path.to_string());
         info!("Unmarshalled {}", path);
 
@@ -47,26 +49,15 @@ impl Simulation {
             consts.nu, consts.tau, consts.omega
         );
 
-        let mut vessels: Vec<Vessel> = parse
-            .vessels
-            .iter()
-            .map(|v| Vessel::new(&v, consts.clone()))
-            .collect();
+        let mut vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
+
+        let algo = T::new(consts.clone());
 
         for v in &mut vessels {
-            for i in 0..v.x_last {
-                v.compute_F(i);
-            }
-
-            for i in 0..v.x_last {
-                v.cells.u[i] += ((consts.dt / 2.0) * v.cells.F[i]) / v.cells.A[i];
-                let feq = Simulation::computeFEQ(v.cells.A[i], v.cells.u[i], consts.c);
-
-                v.cells.f0[i] = feq.0;
-                v.cells.f1[i] = feq.1;
-                v.cells.f2[i] = feq.2;
-                v.cells.A[i] = v.cells.f0[i] + v.cells.f1[i] + v.cells.f2[i];
-            }
+            v.cells.F = algo.compute_forcing_term(v);
+            v.cells.u = algo.compute_velocity(v);
+            v.cells.f = algo.compute_FEQ(v);
+            v.cells.A = algo.compute_area(v);
         }
 
         info!("Initialized vessels");
@@ -75,18 +66,8 @@ impl Simulation {
             consts,
             total_time,
             vessels,
+            algo,
             inlet: Inlet::new(&inlet_data),
         }
-    }
-
-    pub fn computeFEQ(A: f64, u: f64, c: f64) -> (f64, f64, f64) {
-        let uc = u / c;
-        let uc2 = uc * uc;
-
-        (
-            (1.0 / 3.0) * A * (2.0 - 3.0 * uc2),
-            (1.0 / 6.0) * A * (1.0 - 3.0 * uc + 3.0 * uc2),
-            (1.0 / 6.0) * A * (1.0 + 3.0 * uc + 3.0 * uc2),
-        )
     }
 }

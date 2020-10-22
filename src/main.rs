@@ -8,6 +8,7 @@ extern crate serde_json;
 extern crate splines;
 
 use color_eyre::eyre;
+use lbm_blood_1d::lbm_algorithm::AlgoBase;
 use lbm_blood_1d::logging::tracing_init;
 use lbm_blood_1d::settings::Settings;
 use lbm_blood_1d::simulation::*;
@@ -22,7 +23,7 @@ fn main() -> eyre::Result<()> {
 
     info!("Execution started.");
 
-    Simulation::new("vascularNetworks/bifur.json");
+    Simulation::<AlgoBase>::new("vascularNetworks/bifur.json");
 
     Ok(())
 }
