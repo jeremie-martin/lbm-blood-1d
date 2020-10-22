@@ -1,4 +1,4 @@
-use crate::vessels::*;
+use crate::vessels_parsing::VesselParsing;
 use itertools_num::linspace;
 use serde::{Deserialize, Serialize};
 use splines::{Interpolation, Key, Spline};
@@ -19,12 +19,12 @@ pub struct SimulationParsing {
     pub mu: f64,
     /// Blood density [kg.m-3]
     pub rho: f64,
-    /// Time of the simulation
+    /// Duration of the simulation
     pub total_time: f64,
     /// Path to the inlet file
     pub inlet_path: String,
     /// [Vessels](crate::Vessel)
-    pub vessels: Vec<Vessel>,
+    pub vessels: Vec<VesselParsing>,
 }
 
 impl SimulationParsing {

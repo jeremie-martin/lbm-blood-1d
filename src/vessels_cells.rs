@@ -3,8 +3,15 @@
 use serde::{Deserialize, Serialize};
 use tracing::{event, info, instrument, span, warn, Level};
 
+// #[derive(Debug, Clone)]
+// pub struct Populations(pub f64, pub f64, pub f64);
+
+pub type Populations = (f64, f64, f64);
+
 #[derive(Debug, Clone)]
 pub struct Cells {
+    pub f: Vec<Populations>,
+    pub ff: Vec<[f64; 3]>,
     /// Stationary populations of particules
     pub f0: Vec<f64>,
     /// Right to left populations of particules
@@ -41,6 +48,8 @@ impl Default for Cells {
 impl Cells {
     pub fn new(x_dim: usize) -> Cells {
         Cells {
+            f: vec![(0.0f64, 0.0f64, 0.0f64); x_dim],
+            ff: vec![[0.0f64; 3]; x_dim],
             f0: vec![0.0f64; x_dim],
             f1: vec![0.0f64; x_dim],
             f2: vec![0.0f64; x_dim],

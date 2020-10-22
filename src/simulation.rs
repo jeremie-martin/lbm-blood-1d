@@ -1,6 +1,7 @@
 //! Initializes and runs a simulation
 
 use crate::boundary_conditions::Inlet;
+use crate::constants::Constants;
 use crate::simulation_parsing::*;
 use crate::vessels::*;
 use itertools_num::linspace;
@@ -11,23 +12,11 @@ use std::fs::File;
 use tracing::{event, info, instrument, span, warn, Level};
 
 /// Contains the simulation parameters and the vessels.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Simulation {
-    /// Space step [m]
-    pub dx: f64,
-    /// Time step, depends on dx [m]
-    pub dt: f64,
-    /// Lattice velocity [m.s-1]
-    pub c: f64,
-    /// Lattice velocity squared [m2.s-2]
-    pub c2: f64,
-    /// Lattice speed of sound [m.s-1]
-    pub cs: f64,
-    /// Lattice speed of sound squared [m2.s-1]
-    pub cs2: f64,
-    /// Relaxation rate [dimensionless]
-    pub omega: f64,
-    /// Time of the simulation
+    /// [Constants](crate::Constants)
+    pub consts: Constants,
+    /// Duration of the simulation
     pub total_time: f64,
     /// [Vessels](crate::Vessel)
     pub vessels: Vec<Vessel>,
@@ -44,46 +33,34 @@ impl Simulation {
         let inlet_data = SimulationParsing::read_inlet(&parse.inlet_path);
         info!("Unmarshalled {}", parse.inlet_path);
 
-        let dx = parse.dx;
-        let dt = dx * dx;
-
         let total_time = parse.total_time;
 
-        let mu = parse.mu;
-        let rho = parse.rho;
-
-        let c = dx / dt;
-        let c2 = c * c;
-        let cs = c / 3.0f64.sqrt();
-        let cs2 = c2 / 3.0;
-
-        // Kinematic viscosity (ratio of a fluid's dynamic viscosity to the fluid's density) [m2.s-1]
-        let nu = mu / rho;
-
-        // Relaxation time [s]
-        let tau = nu / cs2;
-
-        let omega = dt / (tau + (dt / 2.0));
+        let consts = Constants::new(&parse);
 
         info!("Precomputed constants");
         info!(
             ">dt = {:.4e}, c = {:.4e}, cs = {:.4e}, cs2 = {:.4e}",
-            dt, c, cs, cs2
+            consts.dt, consts.c, consts.cs, consts.cs2
         );
-        info!(">nu = {:.4e}, tau = {:.4e}, omega = {:.4e}", nu, tau, omega);
+        info!(
+            ">nu = {:.4e}, tau = {:.4e}, omega = {:.4e}",
+            consts.nu, consts.tau, consts.omega
+        );
 
-        let mut vessels: Vec<Vessel> = parse.vessels;
+        let mut vessels: Vec<Vessel> = parse
+            .vessels
+            .iter()
+            .map(|v| Vessel::new(&v, consts.clone()))
+            .collect();
 
         for v in &mut vessels {
-            v.init(dx, dt, rho);
-
             for i in 0..v.x_last {
-                v.compute_F(cs2, i);
+                v.compute_F(i);
             }
 
             for i in 0..v.x_last {
-                v.cells.u[i] += ((dt / 2.0) * v.cells.F[i]) / v.cells.A[i];
-                let feq = Simulation::computeFEQ(v.cells.A[i], v.cells.u[i], c);
+                v.cells.u[i] += ((consts.dt / 2.0) * v.cells.F[i]) / v.cells.A[i];
+                let feq = Simulation::computeFEQ(v.cells.A[i], v.cells.u[i], consts.c);
 
                 v.cells.f0[i] = feq.0;
                 v.cells.f1[i] = feq.1;
@@ -95,13 +72,7 @@ impl Simulation {
         info!("Initialized vessels");
 
         Simulation {
-            dx,
-            dt,
-            c,
-            c2,
-            cs,
-            cs2,
-            omega,
+            consts,
             total_time,
             vessels,
             inlet: Inlet::new(&inlet_data),

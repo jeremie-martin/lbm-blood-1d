@@ -11,7 +11,6 @@ use tracing::{event, info, instrument, span, warn, Level};
 
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug, Serialize, Deserialize)]
-
 pub struct Inlet {
     time: Vec<f64>,
     flow: Vec<f64>,
@@ -65,7 +64,6 @@ impl Inlet {
 
     fn interpolate(&self, idx: usize, t: f64) -> f64 {
         self.flow[idx]
-            + (t - self.time[idx]) * (self.flow[idx + 1] - self.flow[idx])
-                / (self.time[idx + 1] - self.time[idx])
+            + (t - self.time[idx]) * (self.flow[idx + 1] - self.flow[idx]) / (self.time[idx + 1] - self.time[idx])
     }
 }

@@ -91,11 +91,7 @@ pub fn tracing_init(args: &Settings) -> Vec<impl Drop> {
                 .event_format(format.clone());
 
             _guards.push(_file_guard);
-            registry()
-                .with(stdout_layer)
-                .with(file_layer)
-                .with(filter)
-                .init();
+            registry().with(stdout_layer).with(file_layer).with(filter).init();
         }
         // Terminal
         Err(e) => {
