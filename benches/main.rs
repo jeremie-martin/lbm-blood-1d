@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use lbm_blood_1d::lbm_algorithm as algo;
+use lbm_blood_1d::lbm_algorithm::*;
 use lbm_blood_1d::simulation::*;
 
 macro_rules! expand_names {
@@ -51,7 +51,8 @@ macro_rules! zip_map_enumerate {
             .map(|($idx, expand_names!($head $(, $tail)*))| $body ).collect()
     };
 }
-pub fn functional(sim: &mut Simulation) {
+
+pub fn functional<T: Algorithm>(sim: &mut Simulation<T>) {
     sim.vessels.iter_mut().for_each(|v| {
         v.cells.F = zip_map_enumerate!(v.cells, |(i, A0, beta)| {
             let P_derivative = (beta) / (2.0 * (v.cells.A[i] * A0).sqrt());
@@ -82,12 +83,12 @@ pub fn functional(sim: &mut Simulation) {
     });
 }
 
-pub fn functional2(sim: &mut Simulation) {
+pub fn functional2<T: Algorithm>(sim: &mut Simulation<T>) {
     for v in &mut sim.vessels {
-        v.cells.F = algo::compute_forcing_term(v);
-        v.cells.u = algo::compute_velocity(v);
-        v.cells.f = algo::compute_FEQ(v);
-        v.cells.A = algo::compute_area(v);
+        v.cells.F = sim.algo.compute_forcing_term(v);
+        v.cells.u = sim.algo.compute_velocity(v);
+        v.cells.f = sim.algo.compute_FEQ(v);
+        v.cells.A = sim.algo.compute_area(v);
     }
 }
 // fn iterative(sim: &mut Simulation) {
@@ -119,11 +120,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("Vessels initialization");
 
     group.bench_function("Functional", |b| {
-        let mut sim = Simulation::new("vascularNetworks/adan56.json");
+        let mut sim = Simulation::<AlgoBase>::new("vascularNetworks/adan56.json");
         b.iter(|| black_box(functional(&mut sim)))
     });
     group.bench_function("Function from lib", |b| {
-        let mut sim = Simulation::new("vascularNetworks/adan56.json");
+        let mut sim = Simulation::<AlgoBase>::new("vascularNetworks/adan56.json");
         b.iter(|| black_box(functional2(&mut sim)))
     });
 
