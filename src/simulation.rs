@@ -15,15 +15,16 @@ use tracing::{event, info, instrument, span, warn, Level};
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug)]
 pub struct Simulation<T: Algorithm> {
-    /// [Constants](crate::Constants)
-    pub consts: Constants,
+    /// Implementation of the LBM steps
+    pub algo: T,
     /// Duration of the simulation
     pub total_time: f64,
-    /// [Vessels](crate::Vessel)
+    /// Cardiovascular network
     pub vessels: Vec<Vessel>,
-    /// Uniformly sampled inflow (w.r.t. dt)
+    /// Constants related to the cardiovascular network
+    pub consts: Constants,
+    /// Inlet (heart)
     pub inlet: Inlet,
-    pub algo: T,
 }
 
 impl<T: Algorithm> Simulation<T> {

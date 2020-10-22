@@ -5,11 +5,21 @@ use crate::constants::Constants;
 use crate::vessels::Vessel;
 use crate::vessels_cells::Populations;
 
+/// Defines the LBM steps along a vessel
 pub trait Algorithm {
+    /// Constructor
     fn new(consts: Constants) -> Self;
+
+    /// Computes the equilibrium populations
     fn compute_FEQ(&self, v: &Vessel) -> Vec<Populations>;
+
+    /// Computes the macroscopic velocity
     fn compute_velocity(&self, v: &Vessel) -> Vec<f64>;
+
+    /// Computes the macroscopic area
     fn compute_area(&self, v: &Vessel) -> Vec<f64>;
+
+    /// Computes the forcing term given the current macroscopic quantities
     fn compute_forcing_term(&self, v: &Vessel) -> Vec<f64>;
 }
 
