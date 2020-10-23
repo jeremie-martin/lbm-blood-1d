@@ -23,7 +23,7 @@ fn main() -> eyre::Result<()> {
 
     info!("Execution started.");
 
-    Simulation::<AlgoBase>::new("vascularNetworks/bifur.json");
+    let mut sim = Simulation::<AlgoBase>::new("vascularNetworks/bifur.json");
 
     Ok(())
 }
