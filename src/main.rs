@@ -1,10 +1,9 @@
 extern crate chrono;
 extern crate csv;
 extern crate itertools_num;
-extern crate replace_with;
-extern crate ryu; // float to String scientific notation
 extern crate serde;
 extern crate serde_json;
+extern crate slotmap;
 extern crate splines;
 
 use color_eyre::eyre;
@@ -23,7 +22,7 @@ fn main() -> eyre::Result<()> {
 
     info!("Execution started.");
 
-    let mut sim = Simulation::new("vascularNetworks/bifur.json");
+    let mut sim = Simulation::new("vascularNetworks/bifur.json", args.time_between_save);
 
     sim.run::<AlgoBase>();
 

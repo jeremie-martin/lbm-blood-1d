@@ -7,9 +7,8 @@ use crate::simulation_parsing::*;
 use crate::vessels::*;
 use crate::vessels_parsing::*;
 use itertools_num::linspace;
-use replace_with::replace_with;
 use serde::{Deserialize, Serialize};
-use splines::{Interpolation, Key, Spline};
+use slotmap::{new_key_type, Key, SlotMap, Slottable};
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::prelude::*;
@@ -32,11 +31,15 @@ pub struct Simulation {
     /// Inlet (heart)
     pub inlet: Inlet,
     pub file: File,
+    /// Save every `x` second
+    pub time_between_save: f64,
+    /// Elapsed time since last save
+    pub time_since_last_save: f64,
 }
 
 impl Simulation {
     /// Returns a structure ready to be simulated, given the `path` to a .json describing both the simulation parameters and the cardiovascular network.
-    pub fn new(path: &str) -> Simulation {
+    pub fn new(path: &str, time_between_save: f64) -> Simulation {
         let mut parse = SimulationParsing::read_json(&path.to_string());
         info!("Unmarshalled {}", path);
 
@@ -65,7 +68,8 @@ impl Simulation {
             current_iter: 0,
             total_time,
             vessels,
-            // compute: Box::new(compute),
+            time_between_save,
+            time_since_last_save: 0.0,
             inlet: Inlet::new(&inlet_data),
             file: File::create("res/A").unwrap(),
         }
@@ -103,12 +107,6 @@ impl Simulation {
                 *f1 = feq.1;
                 *f2 = feq.2;
             });
-            // zip_for_each!(v.cells, |(A, u, mut f0, mut f1, mut f2)| {
-            //     let feq = compute.FEQ(A, u);
-            //     *f0 = feq.0;
-            //     *f1 = feq.1;
-            //     *f2 = feq.2;
-            // });
 
             zip_for_each!(v.cells, |(mut A, f0, f1, f2)| { *A = compute.area((f0, f1, f2)) });
             zip_for_each!(v.cells, |(A, u, F, beta, A0, f0, f1, f2, mut stress)| {
@@ -141,8 +139,8 @@ impl Simulation {
             if v.is_inlet == false {
                 continue;
             }
-            if self.current_iter % 100 == 0 {
-                info!("{} {}", self.current_time, self.current_iter);
+            if self.time_since_last_save >= self.time_between_save {
+                info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
                 info!("A: {:?}", &v.cells.A[..5]);
                 // info!("A: {:?}", &v.cells.A[100..105]);
                 info!("A: {:?}", &v.cells.A[v.x_last - 5..v.x_last]);
@@ -151,6 +149,8 @@ impl Simulation {
                     write!(file, "{} ", A);
                 });
                 write!(self.file, "\n");
+
+                self.time_since_last_save = 0.0;
             }
 
             // info!("New iter!");
@@ -230,6 +230,7 @@ impl Simulation {
         }
 
         self.current_time += self.consts.dt;
+        self.time_since_last_save += self.consts.dt;
         self.current_iter += 1;
     }
 }
