@@ -1,0 +1,44 @@
+{
+  "gamma": 2.0,
+  "inlet_path": "vascularNetworks/adan56_inlet.dat",
+  "mu": 0.004,
+  "rho": 1060,
+  "total_time": 8,
+  "vessels": [
+    {
+      "id": 1,
+      "name": "A",
+      "root": true,
+      "length": 3,
+      "radius_proximal": 0.758242250e-2,
+      "radius_distal": 0.758242250e-2,
+      "as": 0.00271546702606,
+      "ps": 13332,
+      "wall_thickness": 0.0009686563975767645,
+      "young_modulus": 500.0e3,
+      "children": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "name": "B",
+      "root": false,
+      "length": 3,
+      "radius_proximal": 0.758242250e-2,
+      "radius_distal": 0.758242250e-2,
+      "wall_thickness": 0.0009686563975767645,
+      "as": 0.00271546702606,
+      "ps": 13332,
+      "young_modulus": 500.0e3,
+      "children": [],
+      "outflow": {
+        "wk3": {
+          "c": 1.0163e-8,
+          "r2": 1.12e8,
+          "r1": 1.17e7
+        }
+      }
+    }
+  ]
+}

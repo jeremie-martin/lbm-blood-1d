@@ -35,7 +35,7 @@ pub trait Compute {
     fn area(&self, f: (&f64, &f64, &f64)) -> f64;
 
     /// Computes the forcing term given the current macroscopic quantities
-    fn forcing_term(&self, v: &mut Vessel);
+    fn forcing_term(&self, v: &mut Vessel, A_lhs: Option<f64>, A_rhs: Option<f64>);
 
     fn non_reflective<'a>(
         &self,
@@ -194,29 +194,33 @@ impl Compute for AlgoBase {
         }
     }
 
-    fn forcing_term(&self, v: &mut Vessel) {
+    // TODO: make a A_derivative function
+    fn forcing_term(&self, v: &mut Vessel, A_lhs: Option<f64>, A_rhs: Option<f64>) {
         for i in 0..v.x_dim {
             let A_derivative = match i {
-                0 => {
+                0 if A_lhs.is_none() => {
                     // v.cells.A[i + 1] - v.cells.A[i]
 
                     (-25.0 / 12.0) * v.cells.A[i] + 4.0 * v.cells.A[i + 1] - 3.0 * v.cells.A[i + 2]
                         + (4.0 / 3.0) * v.cells.A[i + 3]
                         - (1.0 / 4.0) * v.cells.A[i + 4]
                 }
-                i if (i == v.x_last) => {
+                i if (i == v.x_last && A_rhs.is_none()) => {
                     // 1.5 * v.cells.A[i] - 2.0 * v.cells.A[i - 1] + 0.5 * v.cells.A[i - 2]
                     (25.0 / 12.0) * v.cells.A[i] - 4.0 * v.cells.A[i - 1] + 3.0 * v.cells.A[i - 2]
                         - (4.0 / 3.0) * v.cells.A[i - 3]
                         + (1.0 / 4.0) * v.cells.A[i - 4]
                 }
-                1 => -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1],
-                i if (i == v.x_last - 1) => -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1],
-                _ => {
-                    // -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1]
-                    (1.0 / 12.0) * v.cells.A[i - 2] - (2.0 / 3.0) * v.cells.A[i - 1] + (2.0 / 3.0) * v.cells.A[i + 1]
-                        - (1.0 / 12.0) * v.cells.A[i + 2]
-                }
+                0 if A_lhs.is_some() => -0.5 * A_lhs.unwrap() + 0.5 * v.cells.A[i + 1],
+                i if (i == v.x_last && A_rhs.is_some()) => -0.5 * v.cells.A[i - 1] + 0.5 * A_rhs.unwrap(),
+                _ => -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1],
+                // 1 => -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1],
+                // i if (i == v.x_last - 1) => -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1],
+                // _ => {
+                //     // -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1]
+                //     (1.0 / 12.0) * v.cells.A[i - 2] - (2.0 / 3.0) * v.cells.A[i - 1] + (2.0 / 3.0) * v.cells.A[i + 1]
+                //         - (1.0 / 12.0) * v.cells.A[i + 2]
+                // }
             };
 
             let A_derivative = A_derivative / (self.consts.dx);

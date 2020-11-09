@@ -35,6 +35,7 @@ pub struct Vessel {
     pub young_modulus: f64,
     /// Vector of childrens' ids
     pub children: Vec<usize>,
+    pub parent_nb: u32,
     /// Kind of outflow (`None` if the vessel has children)
     pub outflow: Option<Outflow>,
     pub consts: Constants,
@@ -117,6 +118,7 @@ impl Vessel {
             rhs_give: VesselKey::null(),
             lhs_recv: Vec::<VesselKey>::new(),
             rhs_recv: Vec::<VesselKey>::new(),
+            parent_nb: 0,
             consts,
             outflow: outlet,
             x_dim,

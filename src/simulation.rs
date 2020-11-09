@@ -92,6 +92,8 @@ impl Simulation {
 
         for i in 0..vessels.len() {
             for &j in vessels[i].children.clone().iter() {
+                vessels[j].parent_nb += 1;
+
                 let lhs_child_key = vessels[j].lhs_give;
                 let rhs_parent_key = vessels[i].rhs_give;
 
@@ -118,9 +120,21 @@ impl Simulation {
     pub fn run<T: Compute>(&mut self) {
         let compute = T::new(self.consts.clone());
 
-        for v in &mut self.vessels {
-            compute.forcing_term(v);
+        for mut v in self.vessels.iter_mut() {
+            let A_lhs = match v.parent_nb {
+                1 => Some(self.sm[v.lhs_recv[0]].A),
+                _ => None,
+            };
 
+            let A_rhs = match v.children.len() {
+                1 => Some(self.sm[v.rhs_recv[0]].A),
+                _ => None,
+            };
+
+            compute.forcing_term(&mut v, A_lhs, A_rhs);
+        }
+
+        for v in &mut self.vessels {
             zip_for_each!(v.cells, |(A, mut u, F)| { *u = compute.velocity_init(A, u, F) });
 
             compute.dev(v);
@@ -145,11 +159,39 @@ impl Simulation {
                 }
                 _ => (),
             }
+
+            self.sm[v.lhs_give].A = v.cells.A[0];
+            self.sm[v.lhs_give].F = v.cells.F[0];
+            self.sm[v.lhs_give].f = (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]);
+
+            self.sm[v.rhs_give].A = v.cells.A[v.x_last];
+            self.sm[v.rhs_give].F = v.cells.F[v.x_last];
+            self.sm[v.rhs_give].f = (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]);
         }
 
         info!("Initialized vessels");
 
         while self.current_time < 3.3 {
+            if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) {
+                for v in self.vessels.iter() {
+                    info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
+                    info!("A: {:?}", &v.cells.A[..5]);
+                    // info!("A: {:?}", &v.cells.A[100..105]);
+                    info!("A: {:?}", &v.cells.A[v.x_last - 5..v.x_last]);
+                    let mut A_file = &v.A_file;
+                    let mut u_file = &v.u_file;
+
+                    let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
+                    info!("A: {:?}", A.len());
+
+                    unsafe {
+                        A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
+                    }
+                }
+
+                self.time_since_last_save = 0.0;
+                self.save_nb += 1;
+            }
             self.one_step(&compute);
         }
 
@@ -160,29 +202,20 @@ impl Simulation {
         // Save
 
         for mut v in self.vessels.iter_mut() {
-            // if self.current_iter % 100 == 0 && v.is_inlet {
-            if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) && v.is_inlet {
-                info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
-                info!("A: {:?}", &v.cells.A[..5]);
-                // info!("A: {:?}", &v.cells.A[100..105]);
-                info!("A: {:?}", &v.cells.A[v.x_last - 5..v.x_last]);
-                let mut A_file = &v.A_file;
-                let mut u_file = &v.u_file;
+            let A_lhs = match v.parent_nb {
+                1 => Some(self.sm[v.lhs_recv[0]].A),
+                _ => None,
+            };
 
-                let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
-                info!("A: {:?}", A.len());
+            let A_rhs = match v.children.len() {
+                1 => Some(self.sm[v.rhs_recv[0]].A),
+                _ => None,
+            };
 
-                unsafe {
-                    A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
-                }
+            compute.forcing_term(&mut v, A_lhs, A_rhs);
+        }
 
-                self.time_since_last_save = 0.0;
-
-                self.save_nb += 1;
-            }
-
-            compute.forcing_term(&mut v);
-
+        for mut v in self.vessels.iter_mut() {
             zip_for_each!(v.cells, |(mut A, f0, f1, f2)| { *A = compute.area((f0, f1, f2)) });
             zip_for_each!(v.cells, |(A, mut u, F, f0, f1, f2)| {
                 *u = compute.velocity(A, F, (f0, f1, f2))
@@ -221,7 +254,10 @@ impl Simulation {
                     v.cells.f1[1] + A * (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c)
                 }
 
-                false => 0.0,
+                false => match (v.parent_nb) {
+                    1 => self.sm[v.lhs_recv[0]].f.2,
+                    _ => panic!("Vessel {} has {} parents", v.name, v.parent_nb),
+                },
             };
             // // TODO: wrap this map in a macro
             // let a = vessels[0].rhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [2.0, 3.0]
@@ -230,7 +266,7 @@ impl Simulation {
 
             v.cells.f2.push_front(f2);
 
-            let mut front = v.cells.f1.pop_front().unwrap();
+            v.cells.f1.pop_front().unwrap();
 
             let f1 = match v.outflow {
                 Some(Outflow::NonReflective) => 0.0,
@@ -258,7 +294,11 @@ impl Simulation {
 
                     f1
                 }
-                None => 0.0,
+
+                None => match (v.children.len()) {
+                    1 => self.sm[v.rhs_recv[0]].f.1,
+                    _ => panic!("Vessel {} has {} children", v.name, v.children.len()),
+                },
             };
 
             v.cells.f1.push_back(f1);
