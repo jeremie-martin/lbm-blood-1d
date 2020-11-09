@@ -66,6 +66,7 @@ macro_rules! expand_names {
     };
 }
 
+#[macro_export]
 macro_rules! zip_map_enumerate {
     // n = 1
     ( $name:expr, |($idx:ident, $head:ident)| $body:expr ) => {
@@ -76,5 +77,56 @@ macro_rules! zip_map_enumerate {
     ( $name:expr, |($idx:ident, $head:ident $(, $tail:ident)*)| $body:expr ) => {
         expand_iter!($name, $head $(, $tail)*).enumerate()
             .map(|($idx, expand_names!($head $(, $tail)*))| $body ).collect()
+    };
+}
+
+#[macro_export]
+macro_rules! expand_iter_mut {
+    ( $name: expr, $last:ident ) => {
+        (&$name.$last).into_iter()
+    };
+
+    ( $name:expr, mut $last:ident ) => {
+        (&mut $name.$last).into_iter()
+    };
+
+    ( $name: expr, mut $head:ident, $($($tail:ident)+),+) => {
+        expand_iter_mut!($name $(, $($tail)+)*).zip(&mut $name.$head)
+    };
+
+    ( $name: expr, $head:ident, $($($tail:ident)+),+) => {
+        expand_iter_mut!($name $(, $($tail)+)*).zip(&$name.$head)
+    };
+}
+
+#[macro_export]
+macro_rules! expand_names_mut {
+    ( $last:ident ) => {
+        $last
+    };
+
+    ( mut $last:ident ) => {
+        $last
+    };
+
+    ( mut $head:ident $(, $($tail:ident)+)* ) => {
+        (expand_names_mut!($($($tail)+),*), $head)
+    };
+
+    ( $head:ident $(, $($tail:ident)+)* ) => {
+        (expand_names_mut!($($($tail)+),*), $head)
+    };
+}
+
+macro_rules! zip_for_each {
+    // n = 1
+    ( $name:expr, |$head:ident| $body:expr ) => {
+        (&mut $name.$head).iter_mut().map(|$head| $body).collect()
+    };
+
+    // n > 1
+    ( $name:expr, |($($($list:ident)+),+)| $body:expr ) => {
+        expand_iter_mut!($name, $($($list)+),+)
+        .for_each(|expand_names_mut!($($($list)+),+)| $body )
     };
 }

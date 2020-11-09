@@ -25,8 +25,12 @@ pub struct Constants {
     pub nu: f64,
     /// Relaxation time [s]
     pub tau: f64,
+    /// Adjusted Relaxation time [s]
+    pub tau_bar: f64,
     /// Relaxation rate [dimensionless]
     pub omega: f64,
+    /// Relaxation rate of the Force [dimensionless]
+    pub omega_force: f64,
 }
 
 impl Constants {
@@ -48,7 +52,11 @@ impl Constants {
         // Relaxation time [s]
         let tau = nu / cs2;
 
-        let omega = dt / (tau + (dt / 2.0));
+        // Adjusted tau
+        let tau_bar = tau + (dt / 2.0);
+
+        let omega = dt / tau_bar;
+        let omega_force = dt * (1.0 - (dt / (2.0 * tau_bar)));
 
         Constants {
             dx,
@@ -61,7 +69,9 @@ impl Constants {
             cs2,
             nu,
             tau,
+            tau_bar,
             omega,
+            omega_force,
         }
     }
 }

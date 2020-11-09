@@ -41,31 +41,49 @@ impl Vessel {
         let x_dim = (parse.length / consts.dx).round() as usize;
         let x_last = x_dim - 1;
 
+        let mut outlet = parse.outflow.clone();
+
+        match outlet {
+            Some(Outflow::WK3(ref mut wk3)) => {
+                wk3.pc = 0.0;
+            }
+            _ => (),
+        }
+
         let mut cells = Cells::new(x_dim);
 
         let x_last_f = x_last as f64;
+        let slope = (parse.radius_distal - parse.radius_proximal) / parse.length;
 
-        for i in 0..x_last {
+        let ah = 0.2802;
+        let bh = -5.053e2;
+        let ch = 0.1324;
+        let dh = -0.1114e2;
+
+        let Rm = (parse.radius_distal + parse.radius_proximal) * 0.5;
+
+        let h0 = parse.wall_thickness;
+        info!("h0 before {}", h0);
+        let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
+        info!("h0 after {}", h0);
+
+        for i in 0..x_dim {
             let i_f = i as f64;
 
             // Linear interpolation
-            let radius =
-                ((x_last_f - i_f) / (x_last_f)) * parse.radius_proximal + (i_f / x_last_f) * parse.radius_distal;
+            let radius = slope * i_f * consts.dx + parse.radius_proximal;
 
             cells.A[i] = PI * radius * radius;
             cells.u[i] = 0.0;
-
-            cells.f[i].0 = (4.0 / 6.0) * cells.A[i];
-            cells.f[i].1 = (1.0 / 6.0) * cells.A[i];
-            cells.f[i].2 = (1.0 / 6.0) * cells.A[i];
 
             cells.f0[i] = (4.0 / 6.0) * cells.A[i];
             cells.f1[i] = (1.0 / 6.0) * cells.A[i];
             cells.f2[i] = (1.0 / 6.0) * cells.A[i];
 
             cells.A0[i] = cells.A[i];
-            cells.s_invA0[i] = FRAC_1_PI.sqrt() / radius;
-            cells.beta[i] = (1.0 / (3.0 * consts.rho * PI.sqrt())) / radius;
+            cells.s_invA0[i] = (1.0 / cells.A0[i]).sqrt();
+            cells.beta[i] = cells.s_invA0[i] * h0 * PI.sqrt() * parse.young_modulus / 0.75;
+            cells.gamma[i] = cells.beta[i] * (1.0 / (3.0 * consts.rho * PI.sqrt())) / radius;
         }
 
         Vessel {
@@ -78,31 +96,11 @@ impl Vessel {
             wall_thickness: parse.wall_thickness,
             young_modulus: parse.young_modulus,
             children: parse.children.clone(),
-            outflow: parse.outflow.clone(),
             consts,
+            outflow: outlet,
             x_dim,
             x_last,
             cells,
         }
-    }
-
-    pub fn compute_F(&mut self, i: usize) {
-        let first = self.cells.A[i] / self.consts.rho;
-        let P_derivative = (self.cells.beta[i]) / (2.0 * (self.cells.A[i] * self.cells.A0[i]).sqrt());
-
-        let H_derivative = (self.cells.A[i] / self.consts.rho) * P_derivative;
-
-        let A_derivative = match i {
-            // Derivative with i and i+1
-            0 => (self.cells.A[i + 1] - self.cells.A[i]) / self.consts.dx,
-
-            // Derivative with i-1 and i-1
-            i if (i == self.x_last) => (self.cells.A[i] - self.cells.A[i - 1]) / self.consts.dx,
-
-            // Derivative with i-1, i and i+1
-            _ => (self.cells.A[i + 1] - self.cells.A[i - 1]) / (2.0 * self.consts.dx),
-        };
-
-        self.cells.F[i] = A_derivative * ((self.consts.cs2) - (H_derivative));
     }
 }

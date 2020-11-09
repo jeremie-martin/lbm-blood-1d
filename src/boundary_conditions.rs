@@ -39,7 +39,6 @@ impl Inlet {
 
         while step > 1 {
             step = (1 + step) / 2;
-            println!("0000000 {} {}", idx, step);
             idx = match (self.time[idx]).partial_cmp(&t) {
                 Some(Ordering::Less) => self.max_idx.min(idx + step),
                 Some(Ordering::Greater) => {

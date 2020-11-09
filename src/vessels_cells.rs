@@ -1,28 +1,31 @@
 //!
 
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use tracing::{event, info, instrument, span, warn, Level};
 
 // #[derive(Debug, Clone)]
 // pub struct Populations(pub f64, pub f64, pub f64);
 
 pub type Populations = (f64, f64, f64);
+pub type Pop = (VecDeque<f64>, VecDeque<f64>, VecDeque<f64>);
 
 #[derive(Debug, Clone)]
 pub struct Cells {
-    pub f: Vec<Populations>,
-    pub ff: Vec<[f64; 3]>,
+    pub fff: Vec<Populations>,
     /// Stationary populations of particules
-    pub f0: Vec<f64>,
+    pub f0: VecDeque<f64>,
     /// Right to left populations of particules
-    pub f1: Vec<f64>,
+    pub f1: VecDeque<f64>,
     /// Left to right populations of particules
-    pub f2: Vec<f64>,
+    pub f2: VecDeque<f64>,
 
     /// Area (rho)
     pub A: Vec<f64>,
     /// Velocity
     pub u: Vec<f64>,
+    pub stress: Vec<f64>,
+    pub deriv: Vec<f64>,
 
     /// Force
     pub F: Vec<f64>,
@@ -48,14 +51,15 @@ impl Default for Cells {
 impl Cells {
     pub fn new(x_dim: usize) -> Cells {
         Cells {
-            f: vec![(0.0f64, 0.0f64, 0.0f64); x_dim],
-            ff: vec![[0.0f64; 3]; x_dim],
-            f0: vec![0.0f64; x_dim],
-            f1: vec![0.0f64; x_dim],
-            f2: vec![0.0f64; x_dim],
+            fff: vec![(0.0f64, 0.0f64, 0.0f64); x_dim],
+            f0: VecDeque::from(vec![0.0f64; x_dim]),
+            f1: VecDeque::from(vec![0.0f64; x_dim]),
+            f2: VecDeque::from(vec![0.0f64; x_dim]),
 
             A: vec![0.0f64; x_dim],
             u: vec![0.0f64; x_dim],
+            stress: vec![0.0f64; x_dim],
+            deriv: vec![0.0f64; x_dim],
 
             A0: vec![0.0f64; x_dim],
             s_invA0: vec![0.0f64; x_dim],

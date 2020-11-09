@@ -1,9 +1,9 @@
 {
-  "dx": 0.001,
-  "gamma": 2,
+  "dx": 0.01,
+  "gamma": 2.0,
   "inlet_path": "vascularNetworks/adan56_inlet.dat",
   "mu": 0.004,
-  "rho": 1050,
+  "rho": 1060,
   "total_time": 8,
   "vessels": [
     {
@@ -11,29 +11,35 @@
       "name": "A",
       "root": true,
       "length": 6,
-      "radius_proximal": 0.007581,
-      "radius_distal": 0.007581,
+      "radius_proximal": 0.758242250e-2,
+      "radius_distal": 0.758242250e-2,
       "as": 0.00271546702606,
       "ps": 13332,
-      "wall_thickness": 0.0009,
-      "young_modulus": 400000,
+      "wall_thickness": 0.0009686563975767645,
+      "young_modulus": 500.0e3,
       "children": [
         2,
         3
       ],
-      "outflow": "non_reflective"
+      "outflow": {
+        "wk3": {
+          "c": 1.0163e-8,
+          "r2": 1.12e8,
+          "r1": 1.17e7
+        }
+      }
     },
     {
       "id": 2,
       "name": "B",
       "root": false,
-      "length": 6,
+      "length": 20,
       "radius_proximal": 0.0070605765,
       "radius_distal": 0.0053605765,
       "as": 0.00271546702606,
       "ps": 13332,
       "wall_thickness": 0.00068,
-      "young_modulus": 500000,
+      "young_modulus": 700000,
       "children": [],
       "outflow": {
         "wk3": {
@@ -53,7 +59,7 @@
       "as": 0.00271546702606,
       "ps": 13332,
       "wall_thickness": 0.00068,
-      "young_modulus": 500000,
+      "young_modulus": 700000,
       "children": [],
       "outflow": {
         "wk3": {
