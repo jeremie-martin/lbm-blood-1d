@@ -22,7 +22,7 @@ fn main() -> eyre::Result<()> {
 
     info!("Execution started.");
 
-    let mut sim = Simulation::new("vascularNetworks/bifur.json", args.time_between_save);
+    let mut sim = Simulation::new("vascularNetworks/bifur.json", args.dx, args.time_between_save);
 
     sim.run::<AlgoBase>();
 

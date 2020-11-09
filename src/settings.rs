@@ -22,4 +22,8 @@ pub struct Settings {
     /// Save every `x` second
     #[structopt(short = "x", long, default_value = "0.01")]
     pub time_between_save: f64,
+
+    /// Space step [m]
+    #[structopt(long, default_value = "0.01")]
+    pub dx: f64,
 }

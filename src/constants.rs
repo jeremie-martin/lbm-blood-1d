@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Constants {
     /// Space step [m]
+    #[serde(default)]
     pub dx: f64,
     /// Time step, depends on dx [m]
     pub dt: f64,
@@ -34,8 +35,7 @@ pub struct Constants {
 }
 
 impl Constants {
-    pub fn new(parse: &SimulationParsing) -> Constants {
-        let dx = parse.dx;
+    pub fn new(parse: &SimulationParsing, dx: f64) -> Constants {
         let dt = dx * dx;
 
         let mu = parse.mu;

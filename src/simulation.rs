@@ -39,7 +39,7 @@ pub struct Simulation {
 
 impl Simulation {
     /// Returns a structure ready to be simulated, given the `path` to a .json describing both the simulation parameters and the cardiovascular network.
-    pub fn new(path: &str, time_between_save: f64) -> Simulation {
+    pub fn new(path: &str, dx: f64, time_between_save: f64) -> Simulation {
         let mut parse = SimulationParsing::read_json(&path.to_string());
         info!("Unmarshalled {}", path);
 
@@ -48,7 +48,7 @@ impl Simulation {
 
         let total_time = parse.total_time;
 
-        let consts = Constants::new(&parse);
+        let consts = Constants::new(&parse, dx);
 
         info!("Precomputed constants");
         info!(
