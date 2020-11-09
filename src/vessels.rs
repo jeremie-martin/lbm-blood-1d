@@ -4,8 +4,13 @@ use crate::constants::Constants;
 use crate::vessels_cells::*;
 use crate::vessels_parsing::*;
 use serde::{Deserialize, Serialize};
+use slotmap::{new_key_type, Key, SlotMap, Slottable};
 use std::f64::consts::{FRAC_1_PI, PI};
 use tracing::{event, info, instrument, span, warn, Level};
+
+new_key_type! {
+    pub struct VesselKey;
+}
 
 /// Represents a vessel
 #[derive(Debug, Clone)]
@@ -27,10 +32,14 @@ pub struct Vessel {
     /// Young's modulus [Pa]
     pub young_modulus: f64,
     /// Vector of childrens' ids
-    pub children: Vec<i64>,
+    pub children: Vec<usize>,
     /// Kind of outflow (`None` if the vessel has children)
     pub outflow: Option<Outflow>,
     pub consts: Constants,
+    pub lhs_give: VesselKey,
+    pub rhs_give: VesselKey,
+    pub lhs_recv: Vec<VesselKey>,
+    pub rhs_recv: Vec<VesselKey>,
     pub cells: Cells,
     pub x_dim: usize,
     pub x_last: usize,
@@ -95,7 +104,11 @@ impl Vessel {
             radius_distal: parse.radius_distal,
             wall_thickness: parse.wall_thickness,
             young_modulus: parse.young_modulus,
-            children: parse.children.clone(),
+            children: parse.children.clone().iter().map(|id| id - 1).collect(),
+            lhs_give: VesselKey::null(),
+            rhs_give: VesselKey::null(),
+            lhs_recv: Vec::<VesselKey>::new(),
+            rhs_recv: Vec::<VesselKey>::new(),
             consts,
             outflow: outlet,
             x_dim,

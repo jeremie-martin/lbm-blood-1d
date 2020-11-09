@@ -15,6 +15,14 @@ use std::io::prelude::*;
 use std::io::Write;
 use tracing::{event, info, instrument, span, warn, Level};
 
+#[derive(Debug, Copy, Clone)]
+pub struct VesselBoundary {
+    pub A0: f64,
+    pub A: f64,
+    pub F: f64,
+    pub f: f64,
+}
+
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug)]
 pub struct Simulation {
@@ -35,6 +43,7 @@ pub struct Simulation {
     pub time_between_save: f64,
     /// Elapsed time since last save
     pub time_since_last_save: f64,
+    sm: SlotMap<VesselKey, VesselBoundary>,
 }
 
 impl Simulation {
@@ -60,7 +69,44 @@ impl Simulation {
             consts.nu, consts.tau, consts.omega
         );
 
-        let vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
+        let mut vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
+
+        let mut sm = SlotMap::with_key();
+
+        for mut v in vessels.iter_mut() {
+            v.lhs_give = sm.insert(VesselBoundary {
+                A0: v.cells.A0[0],
+                A: v.cells.A[0],
+                F: v.cells.F[0],
+                f: v.cells.f1[0],
+            });
+
+            v.rhs_give = sm.insert(VesselBoundary {
+                A0: v.cells.A0[v.x_last],
+                A: v.cells.A[v.x_last],
+                F: v.cells.F[v.x_last],
+                f: v.cells.f2[v.x_last],
+            });
+        }
+
+        for i in 0..vessels.len() {
+            for &j in vessels[i].children.clone().iter() {
+                let lhs_child_key = vessels[j].lhs_give;
+                let rhs_parent_key = vessels[i].rhs_give;
+
+                vessels[i].rhs_recv.push(lhs_child_key);
+                vessels[j].lhs_recv.push(rhs_parent_key);
+            }
+        }
+
+        sm[vessels[0].rhs_give].f = 1.0;
+        sm[vessels[1].lhs_give].f = 2.0;
+        sm[vessels[2].lhs_give].f = 3.0;
+
+        // TODO: wrap this map in a macro
+        let a = vessels[0].rhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [2.0, 3.0]
+        let b = vessels[1].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
+        let c = vessels[2].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
 
         Simulation {
             consts,
@@ -70,6 +116,7 @@ impl Simulation {
             vessels,
             time_between_save,
             time_since_last_save: 0.0,
+            sm: SlotMap::with_key(),
             inlet: Inlet::new(&inlet_data),
             file: File::create("res/A").unwrap(),
         }

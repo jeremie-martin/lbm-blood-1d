@@ -24,7 +24,7 @@ pub struct VesselParsing {
     /// Young's modulus [Pa]
     pub young_modulus: f64,
     /// Vector of childrens' ids
-    pub children: Vec<i64>,
+    pub children: Vec<usize>,
     /// Kind of outflow (`None` if the vessel has children)
     pub outflow: Option<Outflow>,
 }
