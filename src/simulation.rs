@@ -60,7 +60,7 @@ impl Simulation {
             consts.nu, consts.tau, consts.omega
         );
 
-        let mut vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
+        let vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
 
         Simulation {
             consts,
@@ -83,25 +83,12 @@ impl Simulation {
                 continue;
             }
 
-            info!(
-                "f0: {} {} {} {} {}",
-                &v.cells.f0[0], &v.cells.f0[1], &v.cells.f0[2], &v.cells.f0[3], &v.cells.f0[4],
-            );
-            info!(
-                "f1: {} {} {} {} {}",
-                &v.cells.f1[0], &v.cells.f1[1], &v.cells.f1[2], &v.cells.f1[3], &v.cells.f1[4],
-            );
-            info!(
-                "f2: {} {} {} {} {}",
-                &v.cells.f2[0], &v.cells.f2[1], &v.cells.f2[2], &v.cells.f2[3], &v.cells.f2[4],
-            );
             compute.forcing_term(v);
 
             zip_for_each!(v.cells, |(A, mut u, F)| { *u = compute.velocity_init(A, u, F) });
 
             compute.dev(v);
             zip_for_each!(v.cells, |(A, u, F, deriv, mut f0, mut f1, mut f2)| {
-                // println!("deriv {}", deriv);
                 let feq = compute.populations_init(A, u, F, deriv);
                 *f0 = feq.0;
                 *f1 = feq.1;
@@ -124,11 +111,13 @@ impl Simulation {
             }
         }
 
+        info!("Initialized vessels");
+
         while self.current_time < 3.3 {
             self.one_step(&compute);
         }
 
-        info!("Initialized vessels");
+        info!("Simulation done");
     }
 
     pub fn one_step<T: Compute>(&mut self, compute: &T) {
@@ -153,17 +142,12 @@ impl Simulation {
                 self.time_since_last_save = 0.0;
             }
 
-            // info!("New iter!");
             compute.forcing_term(&mut v);
-            // info!("F: {:?}", &v.cells.u[..5]);
 
             zip_for_each!(v.cells, |(mut A, f0, f1, f2)| { *A = compute.area((f0, f1, f2)) });
-            // info!("A: {:?}", &v.cells.A[..5]);
             zip_for_each!(v.cells, |(A, mut u, F, f0, f1, f2)| {
                 *u = compute.velocity(A, F, (f0, f1, f2))
             });
-
-            // info!("u: {:?}", &v.cells.u[..5]);
 
             zip_for_each!(v.cells, |(A, u, F, mut f0, mut f1, mut f2)| {
                 let bgk = compute.BGK(A, u, F, (f0, f1, f2));
@@ -181,37 +165,31 @@ impl Simulation {
             let A = (2.0 * v.cells.f1[1] + v.cells.f0[0] - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
                 / (1.0 - (u / self.consts.c));
 
-            // v.cells.f2.push_front(v.cells.f1[1] + A * (u / self.consts.c));
             v.cells.f2.push_front(
                 v.cells.f1[1] + A * (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c),
             );
 
             let mut front = v.cells.f1.pop_front().unwrap();
-            let idx = v.x_last;
-            // let f1 = v.cells.f1[idx - 1];
-            let mut QQ = 0.0f64;
+
             match v.outflow {
                 Some(Outflow::NonReflective) => panic!("owo"),
                 Some(Outflow::WK3(ref mut wk3)) => {
-                    let idx = v.x_last;
                     let (P, Pn, Q, Qn) = wk3.owo(
-                        v.cells.A[idx],
-                        v.cells.u[idx],
-                        v.cells.A0[idx],
-                        v.cells.beta[idx],
+                        v.cells.A[v.x_last],
+                        v.cells.u[v.x_last],
+                        v.cells.A0[v.x_last],
+                        v.cells.beta[v.x_last],
                         v.consts.dt,
                     );
 
-                    let A = v.cells.A0[idx] * ((Pn / v.cells.beta[idx]) + 1.0).powi(2);
+                    let A = v.cells.A0[v.x_last] * ((Pn / v.cells.beta[v.x_last]) + 1.0).powi(2);
                     let u = Qn / A;
-                    QQ = Qn;
 
                     wk3.P_old.pop_back();
                     wk3.P_old.push_front(P);
                     wk3.Q_old.pop_back();
                     wk3.Q_old.push_front(Q);
 
-                    let A0 = v.cells.A0[v.x_last];
                     let aL = 2.0 * v.cells.F[v.x_last - 1] - v.cells.F[v.x_last - 2];
                     let f2 = v.cells.f2[v.x_last];
                     let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
