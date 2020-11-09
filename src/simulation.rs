@@ -13,14 +13,14 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Write;
-use tracing::{event, info, instrument, span, warn, Level};
+use tracing::{event, info, instrument, span, warn, Level}; // This trait adds methods to writeable types
 
 #[derive(Debug, Copy, Clone)]
 pub struct VesselBoundary {
     pub A0: f64,
     pub A: f64,
     pub F: f64,
-    pub f: f64,
+    pub f: (f64, f64, f64),
 }
 
 /// Contains the simulation parameters and the vessels.
@@ -43,6 +43,7 @@ pub struct Simulation {
     pub time_between_save: f64,
     /// Elapsed time since last save
     pub time_since_last_save: f64,
+    pub save_nb: u64,
     sm: SlotMap<VesselKey, VesselBoundary>,
 }
 
@@ -78,14 +79,14 @@ impl Simulation {
                 A0: v.cells.A0[0],
                 A: v.cells.A[0],
                 F: v.cells.F[0],
-                f: v.cells.f1[0],
+                f: (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]),
             });
 
             v.rhs_give = sm.insert(VesselBoundary {
                 A0: v.cells.A0[v.x_last],
                 A: v.cells.A[v.x_last],
                 F: v.cells.F[v.x_last],
-                f: v.cells.f2[v.x_last],
+                f: (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]),
             });
         }
 
@@ -99,15 +100,6 @@ impl Simulation {
             }
         }
 
-        sm[vessels[0].rhs_give].f = 1.0;
-        sm[vessels[1].lhs_give].f = 2.0;
-        sm[vessels[2].lhs_give].f = 3.0;
-
-        // TODO: wrap this map in a macro
-        let a = vessels[0].rhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [2.0, 3.0]
-        let b = vessels[1].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
-        let c = vessels[2].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
-
         Simulation {
             consts,
             current_time: 0.0,
@@ -116,9 +108,10 @@ impl Simulation {
             vessels,
             time_between_save,
             time_since_last_save: 0.0,
-            sm: SlotMap::with_key(),
+            sm: sm,
             inlet: Inlet::new(&inlet_data),
             file: File::create("res/A").unwrap(),
+            save_nb: 0,
         }
     }
 
@@ -126,10 +119,6 @@ impl Simulation {
         let compute = T::new(self.consts.clone());
 
         for v in &mut self.vessels {
-            if v.is_inlet == false {
-                continue;
-            }
-
             compute.forcing_term(v);
 
             zip_for_each!(v.cells, |(A, mut u, F)| { *u = compute.velocity_init(A, u, F) });
@@ -164,30 +153,32 @@ impl Simulation {
             self.one_step(&compute);
         }
 
-        info!("Simulation don:");
+        info!("Simulation done (tot: {} save)", self.save_nb);
     }
 
     pub fn one_step<T: Compute>(&mut self, compute: &T) {
         // Save
 
-        let mut file = self.file.try_clone().unwrap();
         for mut v in self.vessels.iter_mut() {
-            if v.is_inlet == false {
-                continue;
-            }
-            if self.current_iter % 100 == 0 {
-                // if self.time_since_last_save >= self.time_between_save {
+            // if self.current_iter % 100 == 0 && v.is_inlet {
+            if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) && v.is_inlet {
                 info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
                 info!("A: {:?}", &v.cells.A[..5]);
                 // info!("A: {:?}", &v.cells.A[100..105]);
                 info!("A: {:?}", &v.cells.A[v.x_last - 5..v.x_last]);
-                zip_for_each!(v.cells, |(A, u, F)| {
-                    // for A in &v.cells.A {
-                    write!(file, "{} ", A);
-                });
-                write!(self.file, "\n");
+                let mut A_file = &v.A_file;
+                let mut u_file = &v.u_file;
+
+                let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
+                info!("A: {:?}", A.len());
+
+                unsafe {
+                    A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
+                }
 
                 self.time_since_last_save = 0.0;
+
+                self.save_nb += 1;
             }
 
             compute.forcing_term(&mut v);
@@ -204,23 +195,45 @@ impl Simulation {
                 *f2 = bgk.2;
             });
 
-            let backkk = v.cells.f2.pop_back().unwrap();
-            let mut u = self.inlet.flow_at_time(self.current_time) / v.cells.A[0];
-            if self.current_time > 1.1 {
-                u = 0.0;
-            }
+            self.sm[v.lhs_give].A = v.cells.A[0];
+            self.sm[v.lhs_give].F = v.cells.F[0];
+            self.sm[v.lhs_give].f = (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]);
 
-            let A = (2.0 * v.cells.f1[1] + v.cells.f0[0] - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
-                / (1.0 - (u / self.consts.c));
+            self.sm[v.rhs_give].A = v.cells.A[v.x_last];
+            self.sm[v.rhs_give].F = v.cells.F[v.x_last];
+            self.sm[v.rhs_give].f = (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]);
+        }
 
-            v.cells.f2.push_front(
-                v.cells.f1[1] + A * (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c),
-            );
+        for mut v in self.vessels.iter_mut() {
+            v.cells.f2.pop_back().unwrap();
+
+            let f2 = match v.is_inlet {
+                true => {
+                    let mut u = self.inlet.flow_at_time(self.current_time) / v.cells.A[0];
+                    if self.current_time > 1.1 {
+                        u = 0.0;
+                    }
+
+                    let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
+                        - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
+                        / (1.0 - (u / self.consts.c));
+
+                    v.cells.f1[1] + A * (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c)
+                }
+
+                false => 0.0,
+            };
+            // // TODO: wrap this map in a macro
+            // let a = vessels[0].rhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [2.0, 3.0]
+            // let b = vessels[1].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
+            // let c = vessels[2].lhs_recv.iter().map(|key| sm[*key].f).collect::<Vec<f64>>(); // [1.0]
+
+            v.cells.f2.push_front(f2);
 
             let mut front = v.cells.f1.pop_front().unwrap();
 
-            match v.outflow {
-                Some(Outflow::NonReflective) => panic!("owo"),
+            let f1 = match v.outflow {
+                Some(Outflow::NonReflective) => 0.0,
                 Some(Outflow::WK3(ref mut wk3)) => {
                     let (P, Pn, Q, Qn) = wk3.owo(
                         v.cells.A[v.x_last],
@@ -243,10 +256,12 @@ impl Simulation {
                     let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
                     let f1 = F + f2 - (Qn / self.consts.c);
 
-                    v.cells.f1.push_back(f1);
+                    f1
                 }
-                None => panic!("Vessel {} ({}) outlet type is not set", v.name, v.id),
+                None => 0.0,
             };
+
+            v.cells.f1.push_back(f1);
 
             // let back = match v.outflow {
             //     Some(Outflow::NonReflective) => compute.non_reflective(v),

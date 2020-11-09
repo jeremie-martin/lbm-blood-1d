@@ -6,6 +6,8 @@ use crate::vessels_parsing::*;
 use serde::{Deserialize, Serialize};
 use slotmap::{new_key_type, Key, SlotMap, Slottable};
 use std::f64::consts::{FRAC_1_PI, PI};
+use std::fs::File;
+use std::fs::OpenOptions;
 use tracing::{event, info, instrument, span, warn, Level};
 
 new_key_type! {
@@ -13,7 +15,7 @@ new_key_type! {
 }
 
 /// Represents a vessel
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Vessel {
     /// `id`-th vessel in the vascular network
     pub id: i64,
@@ -43,6 +45,9 @@ pub struct Vessel {
     pub cells: Cells,
     pub x_dim: usize,
     pub x_last: usize,
+
+    pub A_file: File,
+    pub u_file: File,
 }
 
 impl Vessel {
@@ -95,6 +100,9 @@ impl Vessel {
             cells.gamma[i] = cells.beta[i] * (1.0 / (3.0 * consts.rho * PI.sqrt())) / radius;
         }
 
+        let A_file = File::create(format!("res/{}_A", parse.name)).unwrap();
+        let u_file = File::create(format!("res/{}_u", parse.name)).unwrap();
+
         Vessel {
             id: parse.id - 1,
             name: parse.name.clone(),
@@ -114,6 +122,8 @@ impl Vessel {
             x_dim,
             x_last,
             cells,
+            A_file,
+            u_file,
         }
     }
 }
