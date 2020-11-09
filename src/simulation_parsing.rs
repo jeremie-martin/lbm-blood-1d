@@ -11,8 +11,6 @@ pub type InletRaw = (f64, f64);
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SimulationParsing {
-    /// Space step [m]
-    pub dx: f64,
     /// Wall visco-elasticity (Pa.s.m-1)
     pub gamma: f64,
     /// Blood dynamic viscosity [Pa.s = kg.m-1.s-1]

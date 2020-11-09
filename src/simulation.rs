@@ -117,7 +117,7 @@ impl Simulation {
             self.one_step(&compute);
         }
 
-        info!("Simulation done");
+        info!("Simulation don:");
     }
 
     pub fn one_step<T: Compute>(&mut self, compute: &T) {
@@ -128,7 +128,8 @@ impl Simulation {
             if v.is_inlet == false {
                 continue;
             }
-            if self.time_since_last_save >= self.time_between_save {
+            if self.current_iter % 100 == 0 {
+                // if self.time_since_last_save >= self.time_between_save {
                 info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
                 info!("A: {:?}", &v.cells.A[..5]);
                 // info!("A: {:?}", &v.cells.A[100..105]);

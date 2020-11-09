@@ -1,5 +1,4 @@
 {
-  "dx": 0.01,
   "gamma": 2.0,
   "inlet_path": "vascularNetworks/adan56_inlet.dat",
   "mu": 0.004,
