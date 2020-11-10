@@ -16,6 +16,8 @@ name = "main"
 harness = false
 
 [dependencies]
+nalgebra = "0.23.0"
+openblas-src = "0.7"
 slotmap = "0.4.0"
 splines = "3.4.1"
 itertools-num = "0.1.3"

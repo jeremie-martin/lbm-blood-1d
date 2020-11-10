@@ -2,6 +2,7 @@
 #![warn(missing_doc_code_examples)]
 #![allow(non_snake_case)]
 #![feature(core_intrinsics)]
+#![feature(destructuring_assignment)]
 
 //! One-dimensional blood flow dynamics simulation using the Lattice Boltzmann Method
 

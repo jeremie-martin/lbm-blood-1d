@@ -199,17 +199,18 @@ impl Compute for AlgoBase {
         for i in 0..v.x_dim {
             let A_derivative = match i {
                 0 if A_lhs.is_none() => {
-                    // v.cells.A[i + 1] - v.cells.A[i]
+                    v.cells.A[i + 1] - v.cells.A[i]
 
-                    (-25.0 / 12.0) * v.cells.A[i] + 4.0 * v.cells.A[i + 1] - 3.0 * v.cells.A[i + 2]
-                        + (4.0 / 3.0) * v.cells.A[i + 3]
-                        - (1.0 / 4.0) * v.cells.A[i + 4]
+                    // (-25.0 / 12.0) * v.cells.A[i] + 4.0 * v.cells.A[i + 1] - 3.0 * v.cells.A[i + 2]
+                    //     + (4.0 / 3.0) * v.cells.A[i + 3]
+                    //     - (1.0 / 4.0) * v.cells.A[i + 4]
                 }
                 i if (i == v.x_last && A_rhs.is_none()) => {
+                    v.cells.A[i] - v.cells.A[i - 1]
                     // 1.5 * v.cells.A[i] - 2.0 * v.cells.A[i - 1] + 0.5 * v.cells.A[i - 2]
-                    (25.0 / 12.0) * v.cells.A[i] - 4.0 * v.cells.A[i - 1] + 3.0 * v.cells.A[i - 2]
-                        - (4.0 / 3.0) * v.cells.A[i - 3]
-                        + (1.0 / 4.0) * v.cells.A[i - 4]
+                    // (25.0 / 12.0) * v.cells.A[i] - 4.0 * v.cells.A[i - 1] + 3.0 * v.cells.A[i - 2]
+                    //     - (4.0 / 3.0) * v.cells.A[i - 3]
+                    //     + (1.0 / 4.0) * v.cells.A[i - 4]
                 }
                 0 if A_lhs.is_some() => -0.5 * A_lhs.unwrap() + 0.5 * v.cells.A[i + 1],
                 i if (i == v.x_last && A_rhs.is_some()) => -0.5 * v.cells.A[i - 1] + 0.5 * A_rhs.unwrap(),

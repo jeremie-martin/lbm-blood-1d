@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate csv;
 extern crate itertools_num;
+extern crate nalgebra;
 extern crate serde;
 extern crate serde_json;
 extern crate slotmap;
