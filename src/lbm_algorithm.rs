@@ -168,14 +168,14 @@ impl Compute for AlgoBase {
         for i in 0..v.x_dim {
             let A_derivative = match i {
                 0 => {
-                    v.cells.u[i + 1] - v.cells.u[i]
-
+                    -0.5 * v.cells.u[0] + 0.5 * v.cells.u[i + 1]
                     // (-25.0 / 12.0) * v.cells.A[i] + 4.0 * v.cells.A[i + 1] - 3.0 * v.cells.A[i + 2]
                     //     + (4.0 / 3.0) * v.cells.A[i + 3]
                     //     - (1.0 / 4.0) * v.cells.A[i + 4]
                 }
                 i if (i == v.x_last) => {
-                    v.cells.u[i] - v.cells.u[i - 1]
+                    -0.5 * v.cells.u[i - 1] + 0.5 * v.cells.u[i]
+                    // v.cells.u[i] - v.cells.u[i - 1]
                     // (25.0 / 12.0) * v.cells.A[i] - 4.0 * v.cells.A[i - 1] + 3.0 * v.cells.A[i - 2]
                     //     - (4.0 / 3.0) * v.cells.A[i - 3]
                     //     + (1.0 / 4.0) * v.cells.A[i - 4]
@@ -183,9 +183,10 @@ impl Compute for AlgoBase {
                 1 => -0.5 * v.cells.u[i - 1] + 0.5 * v.cells.u[i + 1],
                 i if (i == v.x_last - 1) => -0.5 * v.cells.u[i - 1] + 0.5 * v.cells.u[i + 1],
                 _ => {
+                    -0.5 * v.cells.u[i - 1] + 0.5 * v.cells.u[i]
                     // -0.5 * v.cells.A[i - 1] + 0.5 * v.cells.A[i + 1]
-                    (1.0 / 12.0) * v.cells.u[i - 2] - (2.0 / 3.0) * v.cells.u[i - 1] + (2.0 / 3.0) * v.cells.u[i + 1]
-                        - (1.0 / 12.0) * v.cells.u[i + 2]
+                    // (1.0 / 12.0) * v.cells.u[i - 2] - (2.0 / 3.0) * v.cells.u[i - 1] + (2.0 / 3.0) * v.cells.u[i + 1]
+                    //     - (1.0 / 12.0) * v.cells.u[i + 2]
                 }
             };
 
@@ -226,9 +227,14 @@ impl Compute for AlgoBase {
 
             let A_derivative = A_derivative / (self.consts.dx);
 
+            let cp2 = v.cells.gamma[i] * (v.cells.A[i]).sqrt() * 1.5;
+
             v.cells.F[i] = -A_derivative
                 * (((v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt()) / (2.0 * self.consts.rho))
                     - self.consts.cs2);
+
+            let gamma_profile = 4.0;
+            v.cells.F[i] -= 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * v.cells.u[i];
             // v.cells.F[i] = 0.5
             //     * (2.0 * self.consts.cs2 * self.consts.rho - v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt())
             //     * A_derivative

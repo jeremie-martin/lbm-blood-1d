@@ -9,14 +9,17 @@ from matplotlib import animation
 # y = np.fromfile('out/A')
 # y2 = np.fromfile('out/A')
 # y3 = np.fromfile('out/A')
-SAVE_NB = 653
+SAVE_NB = 3301
 
 y = np.fromfile('res/A_A')
 y2 = np.fromfile('res/B_A')
-y3 = np.fromfile('res/B_A')
+y3 = np.fromfile('res/C_A')
 y = np.reshape(y, (SAVE_NB, y.shape[0] // SAVE_NB))
 y2 = np.reshape(y2, (SAVE_NB, y2.shape[0] // SAVE_NB))
 y3 = np.reshape(y3, (SAVE_NB, y3.shape[0] // SAVE_NB))
+
+print(y[0:5])
+print(y[-5:])
 #  y = np.fromfile('res/A')
 #  y2 = np.fromfile('res/A')
 #  y3 = np.fromfile('res/A')
@@ -58,14 +61,14 @@ tot = len(y[0]) + len(y2[0]) + len(y3[0])
 
 FRAME_NB = y.shape[0]
 
-y = y - y[0]
-y2 = y2 - y2[0]
-y3 = y3 - y3[0]
+#  y = y - y[0]
+#  y2 = y2 - y2[0]
+#  y3 = y3 - y3[0]
 
 fig, ax = plt.subplots(figsize=(16, 9))
 x = np.linspace(0, 3, len(y[0]))
 x2 = np.linspace(3, 6, len(y2[0]))
-x3 = np.linspace(3, 6, len(y3[0]))
+x3 = np.linspace(6, 9, len(y3[0]))
 line, = ax.plot(x, np.sin(x / 100), 'b', label='A')
 line2, = ax.plot(x2, np.sin(x2 / 100), 'r', label='B')
 line3, = ax.plot(x3, np.sin(x3 / 100), 'g')

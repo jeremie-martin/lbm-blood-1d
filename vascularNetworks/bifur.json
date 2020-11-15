@@ -9,7 +9,7 @@
       "id": 1,
       "name": "A",
       "root": true,
-      "length": 6,
+      "length": 8.6,
       "radius_proximal": 0.758242250e-2,
       "radius_distal": 0.758242250e-2,
       "as": 0.00271546702606,
@@ -19,26 +19,19 @@
       "children": [
         2,
         3
-      ],
-      "outflow": {
-        "wk3": {
-          "c": 1.0163e-8,
-          "r2": 1.12e8,
-          "r1": 1.17e7
-        }
-      }
+      ]
     },
     {
       "id": 2,
       "name": "B",
       "root": false,
-      "length": 20,
-      "radius_proximal": 0.0070605765,
-      "radius_distal": 0.0053605765,
+      "length": 8.5,
+      "radius_proximal": 0.5492e-2,
+      "radius_distal": 0.5492e-2,
       "as": 0.00271546702606,
       "ps": 13332,
       "wall_thickness": 0.00068,
-      "young_modulus": 700000,
+      "young_modulus": 700.0e3,
       "children": [],
       "outflow": {
         "wk3": {
@@ -52,13 +45,13 @@
       "id": 3,
       "name": "C",
       "root": false,
-      "length": 6,
-      "radius_proximal": 0.0070605765,
-      "radius_distal": 0.0053605765,
+      "length": 8.5,
+      "radius_proximal": 0.5492e-2,
+      "radius_distal": 0.5492e-2,
       "as": 0.00271546702606,
       "ps": 13332,
       "wall_thickness": 0.00068,
-      "young_modulus": 700000,
+      "young_modulus": 700.0e3,
       "children": [],
       "outflow": {
         "wk3": {

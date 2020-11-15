@@ -12,16 +12,16 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import sys
 
-SAVE_NB = 1270
+SAVE_NB = 3220
 y = np.fromfile('res/A_A')
 y = np.reshape(y, (SAVE_NB, y.shape[0] // SAVE_NB))
-y2 = np.fromfile('res/B_A')
+y2 = np.fromfile('res/A_A')
 y2 = np.reshape(y2, (SAVE_NB, y2.shape[0] // SAVE_NB))
 
-SAVE_NB = 1307
-y3 = np.fromfile('res/C_A')
+SAVE_NB = 3220
+y3 = np.fromfile('res/S_A')
 y3 = np.reshape(y3, (SAVE_NB, y3.shape[0] // SAVE_NB))
-y4 = np.fromfile('res/D_A')
+y4 = np.fromfile('res/S_A')
 y4 = np.reshape(y4, (SAVE_NB, y4.shape[0] // SAVE_NB))
 
 #  y = np.loadtxt('res/A_A')
@@ -74,10 +74,16 @@ ttt3 = int(1*y3.shape[0]/3)
 (ttt, ttt2, ttt3, ttt4) = (0,0,0,0)
 print(ttt, ttt2, ttt3)
 print(y.shape, y2.shape, y3.shape)
+#  y1 = y[ttt:, 0]
+#  y2 = y2[ttt2:, 0]
+#  y3 = y3[ttt3:, 0]
+#  y4 = y4[ttt4:, 0]
 y1 = y[ttt:, int(y.shape[1]/2)-1]
 y2 = y2[ttt2:, int(y2.shape[1]/2)-1]
 y3 = y3[ttt3:, int(y3.shape[1]/2)-1]
 y4 = y4[ttt4:, int(y4.shape[1]/2)-1]
+print(y1[0:5])
+print(y1[-5:])
 #  y1 = y[:, 0]
 #  y2 = y2[:, 0]
 #  y3 = y3[:, 0]
@@ -94,10 +100,10 @@ l3 = 'Left ($A_0 = {:.6f}$)'.format(y3[0])
 l4 = 'Right ($A_0 = {:.6f}$)'.format(y4[0])
 print(np.min(y1), np.max(y1))
 print(np.min(y2), np.max(y2))
-y1 = y1 - y1[0]
-y2 = y2 - y2[0]
-y3 = y3 - y3[0]
-y4 = y4 - y4[0]
+#  y1 = y1 - y1[0]
+#  y2 = y2 - y2[0]
+#  y3 = y3 - y3[0]
+#  y4 = y4 - y4[0]
 print(np.min(y1), np.max(y1))
 print(np.min(y2), np.max(y2))
 

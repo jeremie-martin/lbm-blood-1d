@@ -43,10 +43,10 @@ pub struct Vessel {
     pub rhs_give: VesselKey,
     pub lhs_recv: Vec<VesselKey>,
     pub rhs_recv: Vec<VesselKey>,
-    pub lhs_f2_give: VesselKey,
+    pub lhs_f2_give: Vec<VesselKey>,
     pub lhs_f2_recv: VesselKey,
     pub rhs_f1: VesselKey,
-    pub rhs_coef: f64,
+    pub rhs_coef: Vec<f64>,
     pub cells: Cells,
     pub x_dim: usize,
     pub x_last: usize,
@@ -83,7 +83,6 @@ impl Vessel {
 
         let h0 = parse.wall_thickness;
         info!("h0 before {}", h0);
-        let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
         info!("h0 after {}", h0);
 
         for i in 0..x_dim {
@@ -91,6 +90,8 @@ impl Vessel {
 
             // Linear interpolation
             let radius = slope * i_f * consts.dx + parse.radius_proximal;
+            let Rm = radius;
+            let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
 
             cells.A[i] = PI * radius * radius;
             cells.u[i] = 0.0;
@@ -101,7 +102,7 @@ impl Vessel {
 
             cells.A0[i] = cells.A[i];
             cells.s_invA0[i] = (1.0 / cells.A0[i]).sqrt();
-            cells.beta[i] = cells.s_invA0[i] * h0 * PI.sqrt() * parse.young_modulus / 0.75;
+            cells.beta[i] = 4.0 * cells.s_invA0[i] * h0 * PI.sqrt() * parse.young_modulus / 0.75;
             cells.gamma[i] = cells.beta[i] * (1.0 / (3.0 * consts.rho * PI.sqrt())) / radius;
         }
 
@@ -115,17 +116,17 @@ impl Vessel {
             length: parse.length,
             radius_proximal: parse.radius_proximal,
             radius_distal: parse.radius_distal,
-            wall_thickness: parse.wall_thickness,
+            wall_thickness: h0,
             young_modulus: parse.young_modulus,
             children: parse.children.clone().iter().map(|id| id - 1).collect(),
             lhs_give: VesselKey::null(),
             rhs_give: VesselKey::null(),
             lhs_recv: Vec::<VesselKey>::new(),
             rhs_recv: Vec::<VesselKey>::new(),
-            lhs_f2_give: VesselKey::null(),
+            lhs_f2_give: Vec::<VesselKey>::new(),
             lhs_f2_recv: VesselKey::null(),
             rhs_f1: VesselKey::null(),
-            rhs_coef: 0.0,
+            rhs_coef: Vec::<f64>::new(),
             parent_nb: 0,
             consts,
             outflow: outlet,

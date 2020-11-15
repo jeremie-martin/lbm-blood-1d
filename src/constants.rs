@@ -36,7 +36,7 @@ pub struct Constants {
 
 impl Constants {
     pub fn new(parse: &SimulationParsing, dx: f64) -> Constants {
-        let dt = dx * dx;
+        let dt = dx * dx / 4.0;
 
         let mu = parse.mu;
         let rho = parse.rho;

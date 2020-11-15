@@ -7,7 +7,7 @@ use crate::simulation_parsing::*;
 use crate::vessels::*;
 use crate::vessels_parsing::*;
 use itertools_num::linspace;
-use nalgebra::{Matrix2, Vector2};
+use nalgebra::{Matrix2, Matrix3, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 use slotmap::{new_key_type, Key, SlotMap, Slottable};
 use std::collections::VecDeque;
@@ -97,15 +97,18 @@ impl Simulation {
             for &j in vessels[i].children.clone().iter() {
                 vessels[j].parent_nb += 1;
                 vessels[i].rhs_f1 = sm_soluce.insert(0.0);
-                vessels[i].lhs_f2_give = sm_soluce.insert(0.0);
-                vessels[j].lhs_f2_recv = vessels[i].lhs_f2_give;
+                let rhs_f2_key = sm_soluce.insert(0.0);
+                vessels[i].lhs_f2_give.push(rhs_f2_key);
+                vessels[j].lhs_f2_recv = rhs_f2_key;
 
-                let cp2 =
-                    1.5 * vessels[i].cells.gamma[vessels[i].x_last] * vessels[i].cells.A0[vessels[i].x_last].sqrt();
-                let cp2_r = 1.5 * vessels[j].cells.gamma[0] * vessels[j].cells.A0[0].sqrt();
-                let coef = vessels[j].cells.A0[0] * cp2 / (vessels[i].cells.A0[vessels[i].x_last] * cp2_r);
-                vessels[i].rhs_coef = ((vessels[i].cells.beta[vessels[i].x_last]) / (vessels[j].cells.beta[0])).powi(2)
+                // let cp2 =
+                //     1.5 * vessels[i].cells.gamma[vessels[i].x_last] * vessels[i].cells.A0[vessels[i].x_last].sqrt();
+                // let cp2_r = 1.5 * vessels[j].cells.gamma[0] * vessels[j].cells.A0[0].sqrt();
+                // let coef = vessels[j].cells.A0[0] * cp2 / (vessels[i].cells.A0[vessels[i].x_last] * cp2_r);
+                let coef = ((vessels[i].cells.beta[vessels[i].x_last]) / (vessels[j].cells.beta[0])).powi(2)
                     * ((vessels[j].cells.A0[0]) / (vessels[i].cells.A0[vessels[i].x_last]));
+
+                vessels[i].rhs_coef.push(coef);
                 // debug!("{} {}", vessels[i].rhs_coef, coef);
                 // vessels[i].rhs_coef = coef;
 
@@ -146,12 +149,12 @@ impl Simulation {
 
         for mut v in self.vessels.iter_mut() {
             let A_lhs = match v.parent_nb {
-                1 => None, //Some(self.sm[v.lhs_recv[0]].A),
+                1 => Some(v.cells.A[0]), //Some(self.sm[v.lhs_recv[0]].A),
                 _ => None,
             };
 
             let A_rhs = match v.children.len() {
-                1 => None, //Some(self.sm[v.rhs_recv[0]].A),
+                1 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
                 _ => None,
             };
 
@@ -159,7 +162,9 @@ impl Simulation {
         }
 
         for v in &mut self.vessels {
-            zip_for_each!(v.cells, |(A, mut u, F)| { *u = compute.velocity_init(A, u, F) });
+            zip_for_each!(v.cells, |(A, mut u, F)| {
+                *u = compute.velocity_init(A, u, F);
+            });
 
             compute.dev(v);
             zip_for_each!(v.cells, |(A, u, F, deriv, mut f0, mut f1, mut f2)| {
@@ -171,7 +176,7 @@ impl Simulation {
 
             zip_for_each!(v.cells, |(mut A, f0, f1, f2)| { *A = compute.area((f0, f1, f2)) });
             zip_for_each!(v.cells, |(A, u, F, beta, A0, f0, f1, f2, mut stress)| {
-                *stress = compute.stress(A, u, F, beta, A0, (f0, f1, f2))
+                *stress = compute.stress(A, u, F, beta, A0, (f0, f1, f2));
             });
 
             match v.outflow {
@@ -199,19 +204,24 @@ impl Simulation {
             if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) {
                 for v in self.vessels.iter() {
                     info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
-                    info!("{}: {:?}", v.name, &v.cells.A[..5]);
-                    // info!("A: {:?}", &v.cells.A[100..105]);
-                    info!("{}: {:?}", v.name, &v.cells.A[v.x_last - 5..v.x_last]);
+                    info!("{}: {:?}", v.name, &v.cells.u[..5]);
+                    info!("{}: {:?}", v.name, &v.cells.u[v.x_last - 5..v.x_last]);
+                    info!(
+                        "{}: {} {} {} {}",
+                        v.name, &v.cells.beta[0], &v.cells.gamma[0], &v.cells.u[0], &v.parent_nb
+                    );
                     let mut A_file = &v.A_file;
                     let mut u_file = &v.u_file;
 
                     // let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
                     let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
+                    let u: Vec<f64> = v.cells.u.iter().step_by(1).map(|&x| x).collect();
                     // let A: Vec<f64> = zip_map!(v.cells, |(A, u)| A + u); //v.cells.A.iter().step_by(1).map(|&x| x).collect();
                     info!("A: {:?}", A.len());
 
                     unsafe {
                         A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
+                        u_file.write(std::slice::from_raw_parts(u.as_ptr() as *const u8, u.len() * 8));
                     }
                 }
 
@@ -230,11 +240,13 @@ impl Simulation {
         for mut v in self.vessels.iter_mut() {
             let A_lhs = match v.parent_nb {
                 1 => Some(v.cells.A[0]), //Some(self.sm[v.lhs_recv[0]].A),
+                2 => Some(v.cells.A[0]), //Some(self.sm[v.lhs_recv[0]].A),
                 _ => None,
             };
 
             let A_rhs = match v.children.len() {
                 1 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
+                2 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
                 _ => None,
             };
 
@@ -289,6 +301,8 @@ impl Simulation {
                     let f1 = F + f2 - (Qn / self.consts.c);
 
                     self.sm_soluce[v.rhs_f1] = f1;
+                    v.consts.tau = A;
+                    v.cells.stress[0] = u;
                 }
 
                 None => (),
@@ -298,7 +312,7 @@ impl Simulation {
         for v in self.vessels.iter() {
             match v.is_inlet {
                 true => {
-                    let mut u = self.inlet.flow_at_time(self.current_time) / v.cells.A[0];
+                    let mut u = self.inlet.flow_at_time(self.current_time); // / v.cells.A[0];
                     if self.current_time > 1.1 {
                         u = 0.0;
                     }
@@ -307,8 +321,14 @@ impl Simulation {
                         - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
                         / (1.0 - (u / self.consts.c));
 
-                    self.sm_soluce[v.lhs_f2_recv] = v.cells.f1[1] + A * (u / self.consts.c)
-                        - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c);
+                    self.sm_soluce[v.lhs_f2_recv] =
+                        v.cells.f1[1] + (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c);
+
+                    // let aL = 2.0 * v.cells.F[1] - v.cells.F[2];
+                    // let f1 = v.cells.f1[1]; // Assume already streamed
+                    // let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
+                    // let f2 = -F + f1 + (0.00000000001 / self.consts.c);
+                    // self.sm_soluce[v.lhs_f2_recv] = f2;
                 }
 
                 false => (),
@@ -320,18 +340,39 @@ impl Simulation {
                     1 => {
                         let rhs = self.get_rhs_boundary(v);
                         let b1 = rhs[0].f.0 + rhs[0].f.1
-                            - v.rhs_coef * (v.cells.f0[v.x_last] + v.cells.f2[v.x_last] - v.cells.A0[0])
+                            - v.rhs_coef[0] * (v.cells.f0[v.x_last] + v.cells.f2[v.x_last] - v.cells.A0[0])
                             - rhs[0].A0;
                         let b2 = v.cells.f2[v.x_last]
                             + rhs[0].f.1
                             + (self.consts.dt / (2.0 * self.consts.c)) * (v.cells.F[v.x_last] - rhs[0].F);
 
-                        let A = Matrix2::new(v.rhs_coef, -1.0, 1.0, 1.0);
+                        let A = Matrix2::new(v.rhs_coef[0], -1.0, 1.0, 1.0);
                         let b = Vector2::new(b1, b2);
                         let x = A.lu().solve(&b).unwrap();
 
                         self.sm_soluce[v.rhs_f1] = x[0];
-                        self.sm_soluce[v.lhs_f2_give] = x[1];
+                        self.sm_soluce[v.lhs_f2_give[0]] = x[1];
+                    }
+                    2 => {
+                        let rhs = self.get_rhs_boundary(v);
+                        let b1 = rhs[0].f.0 + rhs[0].f.1
+                            - v.rhs_coef[0] * (v.cells.f0[v.x_last] + v.cells.f2[v.x_last] - v.cells.A0[0])
+                            - rhs[0].A0;
+                        let b2 = rhs[1].f.0 + rhs[1].f.1
+                            - v.rhs_coef[1] * (v.cells.f0[v.x_last] + v.cells.f2[v.x_last] - v.cells.A0[0])
+                            - rhs[1].A0;
+                        let b3 = v.cells.f2[v.x_last]
+                            + rhs[0].f.1
+                            + rhs[1].f.1
+                            + (self.consts.dt / (2.0 * self.consts.c)) * (v.cells.F[v.x_last] - rhs[0].F - rhs[1].F);
+
+                        let A = Matrix3::new(v.rhs_coef[0], -1.0, 0.0, v.rhs_coef[1], 0.0, -1.0, 1.0, 1.0, 1.0);
+                        let b = Vector3::new(b1, b2, b3);
+                        let x = A.lu().solve(&b).unwrap();
+
+                        self.sm_soluce[v.rhs_f1] = x[0];
+                        self.sm_soluce[v.lhs_f2_give[0]] = x[1];
+                        self.sm_soluce[v.lhs_f2_give[1]] = x[2];
                     }
                     _ => panic!("Vessel {} has {} children", v.name, v.children.len()),
                 },
@@ -344,6 +385,27 @@ impl Simulation {
 
             v.cells.f1.pop_front().unwrap();
             v.cells.f1.push_back(self.sm_soluce[v.rhs_f1]);
+            // match v.outflow {
+            //     None => (),
+            //     Some(_) => {
+            //         let u = v.cells.stress[0];
+            //         let A = v.consts.tau;
+            //         // let idx = v.x_last - 2;
+            //         // let f = compute.non_reflective(v, A, u, idx, 0.05);
+            //         // (v.cells.f0[idx], v.cells.f1[idx], v.cells.f2[idx]) = f;
+            //         let idx = v.x_last - 1;
+            //         let f = compute.non_reflective(v, A, u, idx, 0.2);
+            //         // (v.cells.f0[idx], v.cells.f1[idx], v.cells.f2[idx]) = f;
+            //         let idx = v.x_last;
+            //         let uu = compute.velocity(
+            //             &A,
+            //             &v.cells.F[idx - 1],
+            //             (&v.cells.f0[idx - 1], &v.cells.f1[idx - 1], &v.cells.f2[idx - 1]),
+            //         );
+            //         let f = compute.non_reflective(v, A, uu, idx, 0.005);
+            //         // (v.cells.f0[idx], v.cells.f1[idx], v.cells.f2[idx]) = f;
+            //     }
+            // }
         }
 
         self.current_time += self.consts.dt;
