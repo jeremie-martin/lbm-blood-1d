@@ -1,106 +1,105 @@
+import getopt
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from scipy.ndimage.filters import gaussian_filter1d
-from matplotlib import animation
+import math
+import json
 
-#  plt.rcParams['animation.ffmpeg_path'] = ''
+plt.style.use(['science', 'grid'])
 
-# y = np.fromfile('out/A')
-# y2 = np.fromfile('out/A')
-# y3 = np.fromfile('out/A')
-SAVE_NB = 3301
+results_path = 'res'
 
-y = np.fromfile('res/A_A')
-y2 = np.fromfile('res/B_A')
-y3 = np.fromfile('res/C_A')
-y = np.reshape(y, (SAVE_NB, y.shape[0] // SAVE_NB))
-y2 = np.reshape(y2, (SAVE_NB, y2.shape[0] // SAVE_NB))
-y3 = np.reshape(y3, (SAVE_NB, y3.shape[0] // SAVE_NB))
+class Simulation:
+    def __init__(self, path, quantities):
+        if not path.endswith('/'):
+            path += '/'
+        with open(path + 'metadata.json') as f:
+            data = json.load(f)
+        vessels_infos = data['vessels_info']
+        self.dx = data['dx']
+        self.save_nb = data['save_nb']
+        self.time_simul = data['total_time']
+        self.path = path
+        self.x = np.linspace(0.0, self.time_simul, self.save_nb, endpoint=True)
+        self.vessels = []
 
-print(y[0:5])
-print(y[-5:])
-#  y = np.fromfile('res/A')
-#  y2 = np.fromfile('res/A')
-#  y3 = np.fromfile('res/A')
-#  from sys import argv
-#  SAVE_NB = int(argv[1])
-#  # SAVE_NB = 87
-#  y = np.reshape(y, (SAVE_NB, y.shape[0] // SAVE_NB))
-#  # SAVE_NB = 173
-#  y2 = np.reshape(y2, (SAVE_NB, y2.shape[0] // SAVE_NB))
-#  # SAVE_NB = 345
-#  y3 = np.reshape(y3, (SAVE_NB, y3.shape[0]//SAVE_NB))
+        for name,length in vessels_infos:
+            self.vessels.append(Vessel(path, name, length, self.save_nb, quantities))
 
-# y = y[150:, :]
-# y2 = y2[150:, :]
-# y3 = y3[150:, :]
+    def post_process(self, quantity_to_process, *funcs, **kwargs):
+        for v in self.vessels:
+            v.post_process(quantity_to_process, *funcs, dx=self.dx, **kwargs)
 
+    def show_quantity(self, quantity_to_plot, name, xlabel='Time ($s$)', ylabel='', title=None):
+        fig, ax = plt.subplots(figsize=(16,9))
 
-print(y.shape)
-print(y2.shape)
-print(y3.shape)
+        self.plot_quantity(ax, quantity_to_plot)
 
-# print(np.max(np.abs(y[241, :]-y2[241, :])))
-# print(np.max(np.abs(y[241, :])))
+        ax.legend(fontsize=15)
+        plt.xlabel(xlabel, fontsize=15)
+        plt.ylabel(ylabel, fontsize=15)
+        if title != None:
+            plt.title(title, fontsize=18)
 
-# print(y[241,:])
+        fig.savefig(self.path + name, bbox_inches='tight')
 
-# print((y-y2).sum().sum())
-# print((y-y3).sum().sum())
-# print((y2-y3).sum().sum())
+    def plot_quantity(self, ax, quantity_to_plot):
+        for v in self.vessels:
+            for quantity,y in v.data_processed.items():
+                if quantity != quantity_to_plot:
+                    continue
+                label = '{} ({})'.format(v.name, quantity)
+                ax.plot(self.x, y, label=label, linewidth=2)
+    
+class Vessel:
+    def __init__(self, path, name, length, save_nb, quantities):
+        self.name = name
+        self.length = length
+        self.data = {}
+        self.data_processed = {}
+        for quantity in quantities:
+            y = np.fromfile(path + name + '_' + quantity)
+            y = np.reshape(y, (save_nb, y.shape[0] // save_nb))
+            self.data[quantity] = y
 
-# print(y[0])
-from scipy import interpolate
-
-#  y = y / y[0]
-#  y2 = y2 / y2[0]
-#  y3 = y3 / y3[0]
-
-tot = len(y[0]) + len(y2[0]) + len(y3[0])
-
-FRAME_NB = y.shape[0]
-
-#  y = y - y[0]
-#  y2 = y2 - y2[0]
-#  y3 = y3 - y3[0]
-
-fig, ax = plt.subplots(figsize=(16, 9))
-x = np.linspace(0, 3, len(y[0]))
-x2 = np.linspace(3, 6, len(y2[0]))
-x3 = np.linspace(6, 9, len(y3[0]))
-line, = ax.plot(x, np.sin(x / 100), 'b', label='A')
-line2, = ax.plot(x2, np.sin(x2 / 100), 'r', label='B')
-line3, = ax.plot(x3, np.sin(x3 / 100), 'g')
-plt.legend()
-time_text = ax.text(0.05, 0.95, '', horizontalalignment='left',
-                    verticalalignment='top', transform=ax.transAxes)
-
-print(np.min(np.min(y)))
-print(np.max(np.max(y)))
-ax.set_ylim([np.min([np.min(np.min(y)), np.min(np.min(y2)), np.min(np.min(y3))]),
-             np.max([np.max(np.max(y)), np.max(np.max(y2)), np.max(np.max(y3))])])
-# ax.set_ylim([0.0, 0.06])
-
-# ypsmooth = gaussian_filter1d(y[i], sigma=3)
+    def post_process(self, quantity_to_process, *funcs, **kwargs):
+        for quantity,y in self.data.items():
+            if quantity != quantity_to_process:
+                continue
+            tmp = y
+            for func in funcs:
+                tmp = func(tmp, **kwargs)
+            self.data_processed[quantity] = tmp
 
 
-def animate(i):
-    line.set_ydata(y[i])  # update the data.
-    line2.set_ydata(y2[i])  # update the data.
-    line3.set_ydata(y3[i])  # update the data.
-    time_text.set_text('frame ' + str(i) + '/' + str(FRAME_NB))
 
-    # return line, time_text
-    #  return line,  time_text
-    return line, line2, line3, time_text
+def get_data_at_position(data, **kwargs):
+    dx = kwargs.get('dx', None)
+    pos = kwargs.get('pos', None)
+    x = pos / dx
+    xa = math.floor(x)
+    xb = xa + 1
+    ya = data[:, xa]
+    yb = data[:, xb]
+    slope = yb - ya
+    yc = ya + (x - xa) * slope
+    return yc
+
+def difference(data, **kwargs):
+    return data - data[0]
+
+def relative_change(data, **kwargs):
+    return difference(data) / data[0]
 
 
-ani = FuncAnimation(fig, animate, frames=len(y[:, 0]), interval=1, blit=True)
 
-plt.show()
+sim = Simulation(results_path, ['A', 'u'])
 
-mywriter = animation.FFMpegWriter(fps=60, codec='libx264', extra_args=[
-                                 '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-tune', 'animation', '-crf', '18'])
+sim.post_process('A', get_data_at_position, difference, pos=2.0)
+sim.show_quantity('A', 'A_diff.png', ylabel=r'$A - A_0$', title='A, x = 2m')
 
-ani.save('seawave_1d_ani.mp4', writer=mywriter)
+sim.post_process('A', get_data_at_position, relative_change, pos=4.0)
+sim.show_quantity('A', 'A_relative.png', ylabel=r'$\frac{A - A_0}{A_0}$', title='A, x = 4m')
+
+sim.post_process('u', get_data_at_position, pos=2.0)
+sim.show_quantity('u', 'u.png', ylabel=r'$u$', title='u, x = 2m')
+

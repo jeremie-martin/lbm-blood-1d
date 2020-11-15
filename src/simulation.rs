@@ -27,8 +27,6 @@ pub struct VesselBoundary {
 /// Contains the simulation parameters and the vessels.
 #[derive(Debug)]
 pub struct Simulation {
-    /// Implementation of the LBM steps
-    // pub compute: Box<T>,
     pub current_time: f64,
     pub current_iter: u64,
     /// Duration of the simulation
@@ -47,6 +45,14 @@ pub struct Simulation {
     pub save_nb: u64,
     sm: SlotMap<VesselKey, VesselBoundary>,
     sm_soluce: SlotMap<VesselKey, f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SimulationSave {
+    pub total_time: f64,
+    pub dx: f64,
+    pub save_nb: u64,
+    pub vessels_info: Vec<(String, f64)>,
 }
 
 impl Simulation {
@@ -230,6 +236,17 @@ impl Simulation {
             }
             self.one_step(&compute);
         }
+
+        let save = SimulationSave {
+            total_time: self.total_time,
+            dx: self.consts.dx,
+            save_nb: self.save_nb,
+            vessels_info: self.vessels.iter().map(|v| (v.name.clone(), v.length)).collect(),
+        };
+
+        let save = serde_json::to_string(&save).unwrap();
+        let mut save_file = File::create("res/metadata.json").unwrap();
+        write!(save_file, "{}", save);
 
         info!("Simulation done (tot: {} save)", self.save_nb);
     }
