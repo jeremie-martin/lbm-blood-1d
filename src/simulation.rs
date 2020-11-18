@@ -175,6 +175,7 @@ impl Simulation {
             compute.dev(v);
             zip_for_each!(v.cells, |(A, u, F, deriv, mut f0, mut f1, mut f2)| {
                 let feq = compute.populations_init(A, u, F, deriv);
+                // let feq = compute.FEQ(A, u);
                 *f0 = feq.0;
                 *f1 = feq.1;
                 *f2 = feq.2;
@@ -188,7 +189,7 @@ impl Simulation {
             match v.outflow {
                 Some(Outflow::WK3(ref mut wk3)) => {
                     let P = v.cells.beta[v.x_last] * ((v.cells.A[v.x_last] / v.cells.A0[v.x_last]).sqrt() - 1.0);
-                    let Q = v.cells.A[v.x_last] * v.cells.u[v.x_last];
+                    let Q = v.cells.A[v.x_last] * v.cells.u[v.x_last] * self.consts.CQ;
                     wk3.P_old = VecDeque::from(vec![P; 2]);
                     wk3.Q_old = VecDeque::from(vec![Q; 2]);
                 }
@@ -210,20 +211,22 @@ impl Simulation {
             if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) {
                 for v in self.vessels.iter() {
                     info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
-                    info!("{}: {:?}", v.name, &v.cells.u[..5]);
-                    info!("{}: {:?}", v.name, &v.cells.u[v.x_last - 5..v.x_last]);
-                    info!(
-                        "{}: {} {} {} {}",
-                        v.name, &v.cells.beta[0], &v.cells.gamma[0], &v.cells.u[0], &v.parent_nb
-                    );
+                    info!("{}: {:?}", v.name, &v.cells.A[..5]);
+                    info!("{}: {:?}", v.name, &v.cells.A[v.x_last - 5..v.x_last]);
+                    // info!(
+                    //     "{}: {} {} {} {}",
+                    //     v.name, &v.cells.beta[0], &v.cells.gamma[0], &v.cells.u[0], &v.parent_nb
+                    // );
                     let mut A_file = &v.A_file;
                     let mut u_file = &v.u_file;
 
                     // let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
-                    let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x).collect();
-                    let u: Vec<f64> = v.cells.u.iter().step_by(1).map(|&x| x).collect();
+                    // let A: Vec<f64> = zip_map!(v.cells, |(A, A0, beta)| beta * ((A / A0).sqrt() - 1.0));
+                    let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x * self.consts.CA).collect();
+                    let u: Vec<f64> = v.cells.u.iter().step_by(1).map(|&x| x * self.consts.Cu).collect();
                     // let A: Vec<f64> = zip_map!(v.cells, |(A, u)| A + u); //v.cells.A.iter().step_by(1).map(|&x| x).collect();
-                    info!("A: {:?}", A.len());
+                    info!("A: {:?}", &u[..5]);
+                    info!("A: {:?}", &u[v.x_last - 5..v.x_last]);
 
                     unsafe {
                         A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
@@ -238,7 +241,7 @@ impl Simulation {
         }
 
         let save = SimulationSave {
-            total_time: self.total_time,
+            total_time: self.current_time,
             dx: self.consts.dx,
             save_nb: self.save_nb,
             vessels_info: self.vessels.iter().map(|v| (v.name.clone(), v.length)).collect(),
@@ -297,12 +300,14 @@ impl Simulation {
                 Some(Outflow::NonReflective) => (),
                 Some(Outflow::WK3(ref mut wk3)) => {
                     let (P, Pn, Q, Qn) = wk3.owo(
-                        v.cells.A[v.x_last],
-                        v.cells.u[v.x_last],
-                        v.cells.A0[v.x_last],
+                        v.cells.A[v.x_last] * self.consts.CA,
+                        v.cells.u[v.x_last] * self.consts.Cu,
+                        v.cells.A0[v.x_last] * self.consts.CA,
                         v.cells.beta[v.x_last],
-                        v.consts.dt,
+                        v.consts.Ct,
                     );
+
+                    let Qn = Qn / self.consts.CQ;
 
                     let A = v.cells.A0[v.x_last] * ((Pn / v.cells.beta[v.x_last]) + 1.0).powi(2);
                     let u = Qn / A;
@@ -324,24 +329,28 @@ impl Simulation {
 
                 None => (),
             }
-        }
 
-        for v in self.vessels.iter() {
             match v.is_inlet {
                 true => {
-                    let mut u = self.inlet.flow_at_time(self.current_time); // / v.cells.A[0];
+                    let mut u = self.inlet.flow_at_time(self.current_time) / self.consts.CQ; // / v.cells.A[0];
                     if self.current_time > 1.1 {
                         u = 0.0;
                     }
+                    u = 0.0;
 
+                    // let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
+                    //     - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
+                    //     / (1.0 - (u / self.consts.c));
+                    let aL = 2.0 * v.cells.F[1] - v.cells.F[2];
                     let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
                         - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
-                        / (1.0 - (u / self.consts.c));
+                        + u / self.consts.c;
+
+                    // v.cells.A[0] = A;
 
                     self.sm_soluce[v.lhs_f2_recv] =
                         v.cells.f1[1] + (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c);
 
-                    // let aL = 2.0 * v.cells.F[1] - v.cells.F[2];
                     // let f1 = v.cells.f1[1]; // Assume already streamed
                     // let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
                     // let f2 = -F + f1 + (0.00000000001 / self.consts.c);
@@ -350,7 +359,9 @@ impl Simulation {
 
                 false => (),
             }
+        }
 
+        for v in self.vessels.iter() {
             match v.outflow {
                 Some(_) => (),
                 None => match v.children.len() {
@@ -425,8 +436,8 @@ impl Simulation {
             // }
         }
 
-        self.current_time += self.consts.dt;
-        self.time_since_last_save += self.consts.dt;
+        self.current_time += self.consts.Ct;
+        self.time_since_last_save += self.consts.Ct;
         self.current_iter += 1;
     }
 

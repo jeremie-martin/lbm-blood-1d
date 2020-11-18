@@ -32,25 +32,42 @@ pub struct Constants {
     pub omega: f64,
     /// Relaxation rate of the Force [dimensionless]
     pub omega_force: f64,
+    pub Cl: f64,
+    pub Ct: f64,
+    pub CA: f64,
+    pub Cu: f64,
+    pub CQ: f64,
+    pub CF: f64,
+    pub cs2_lat: f64,
 }
 
 impl Constants {
     pub fn new(parse: &SimulationParsing, dx: f64) -> Constants {
-        let dt = dx * dx / 4.0;
+        let Cl = dx;
+        let Ct = dx * dx;
+        let CA = 0.00018061999788253504;
+        let Cu = Cl / Ct;
+        let CQ = CA * Cu;
+        let CF = CA * Cl / (Ct * Ct);
+        let cs2_lat = (Cl / Ct) * (Cl / Ct) / 3.0;
 
         let mu = parse.mu;
         let rho = parse.rho;
+
+        // Kinematic viscosity (ratio of a fluid's dynamic viscosity to the fluid's density) [m2.s-1]
+        let nu = mu / rho;
+
+        let dx = 1.0;
+        let dt = 1.0;
 
         let c = dx / dt;
         let c2 = c * c;
         let cs = c / 3.0f64.sqrt();
         let cs2 = c2 / 3.0;
 
-        // Kinematic viscosity (ratio of a fluid's dynamic viscosity to the fluid's density) [m2.s-1]
-        let nu = mu / rho;
-
         // Relaxation time [s]
         let tau = nu / cs2;
+        let tau = (nu / cs2) * (Ct / (Cl * Cl));
 
         // Adjusted tau
         let tau_bar = tau + (dt / 2.0);
@@ -72,6 +89,13 @@ impl Constants {
             tau_bar,
             omega,
             omega_force,
+            Cl,
+            Ct,
+            CA,
+            Cu,
+            CQ,
+            CF,
+            cs2_lat,
         }
     }
 }

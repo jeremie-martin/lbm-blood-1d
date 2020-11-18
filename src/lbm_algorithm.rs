@@ -190,8 +190,8 @@ impl Compute for AlgoBase {
                 }
             };
 
-            let A_derivative = A_derivative / (self.consts.dx);
-            v.cells.deriv[i] = A_derivative;
+            let A_derivative = self.consts.Cu * A_derivative / (self.consts.Cl);
+            v.cells.deriv[i] = A_derivative / (self.consts.Cu / (self.consts.Cl));
         }
     }
 
@@ -225,17 +225,26 @@ impl Compute for AlgoBase {
                 // }
             };
 
-            let A_derivative = A_derivative / (self.consts.dx);
+            let A_derivative = self.consts.CA * A_derivative / (self.consts.Cl);
 
-            let cp2 = v.cells.gamma[i] * (v.cells.A[i]).sqrt() * 1.5;
+            let cp2 = v.cells.gamma[i] * (v.cells.A[i] * self.consts.CA).sqrt() * 1.5;
 
             v.cells.F[i] = -A_derivative
                 * (((v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt()) / (2.0 * self.consts.rho))
-                    - self.consts.cs2);
+                    - self.consts.cs2_lat);
 
-            let gamma_profile = 4.0;
-            v.cells.F[i] -= 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * v.cells.u[i];
-            // v.cells.F[i] = 0.5
+            let gamma_profile = 9.0;
+            let F = 2.0
+                * std::f64::consts::PI
+                * (self.consts.mu / self.consts.rho)
+                * (1.0 + 2.0)
+                * v.cells.u[i]
+                * self.consts.Cu;
+            // let F = 8.0 * std::f64::consts::PI * (self.consts.mu / self.consts.rho) * (v.cells.u[i] * self.consts.Cu);
+            v.cells.F[i] = (v.cells.F[i] - F) / self.consts.CF;
+
+            // v.cells.F[i] -= 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * v.cells.u[i];
+            // // v.cells.F[i] = 0.5
             //     * (2.0 * self.consts.cs2 * self.consts.rho - v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt())
             //     * A_derivative
             //     / self.consts.rho;

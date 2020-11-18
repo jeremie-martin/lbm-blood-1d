@@ -57,7 +57,7 @@ pub struct Vessel {
 
 impl Vessel {
     pub fn new(parse: &VesselParsing, consts: Constants) -> Vessel {
-        let x_dim = (parse.length / consts.dx).round() as usize;
+        let x_dim = (parse.length / consts.Cl).round() as usize;
         let x_last = x_dim - 1;
 
         let mut outlet = parse.outflow.clone();
@@ -83,17 +83,18 @@ impl Vessel {
 
         let h0 = parse.wall_thickness;
         info!("h0 before {}", h0);
+
+        let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
         info!("h0 after {}", h0);
 
         for i in 0..x_dim {
             let i_f = i as f64;
 
             // Linear interpolation
-            let radius = slope * i_f * consts.dx + parse.radius_proximal;
+            let radius = slope * i_f * consts.Cl + parse.radius_proximal;
             let Rm = radius;
-            let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
 
-            cells.A[i] = PI * radius * radius;
+            cells.A[i] = PI * radius * radius / consts.CA;
             cells.u[i] = 0.0;
 
             cells.f0[i] = (4.0 / 6.0) * cells.A[i];
@@ -101,8 +102,8 @@ impl Vessel {
             cells.f2[i] = (1.0 / 6.0) * cells.A[i];
 
             cells.A0[i] = cells.A[i];
-            cells.s_invA0[i] = (1.0 / cells.A0[i]).sqrt();
-            cells.beta[i] = 4.0 * cells.s_invA0[i] * h0 * PI.sqrt() * parse.young_modulus / 0.75;
+            cells.s_invA0[i] = (1.0 / (cells.A0[i] * consts.CA)).sqrt();
+            cells.beta[i] = cells.s_invA0[i] * h0 * PI.sqrt() * parse.young_modulus / 0.75;
             cells.gamma[i] = cells.beta[i] * (1.0 / (3.0 * consts.rho * PI.sqrt())) / radius;
         }
 
