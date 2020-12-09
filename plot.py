@@ -129,12 +129,12 @@ sim = Simulation(results_path, ['A', 'u'], openbf=False)
 #  results_path = 'res_openbf'
 #  sim_openbf = Simulation(results_path, ['A', 'u'], openbf=True)
 
-#  results_path = 'res2'
-#  sim_openbf = Simulation(results_path, ['A', 'u'], openbf=False)
+results_path = 'res2'
+sim_openbf = Simulation(results_path, ['A', 'u'], openbf=False)
 
-sim.post_process('A', get_data_at_position, pos=0.2)
-#  sim_openbf.post_process('A', get_data_at_position, pos=0.2)
-sim.plot_quantity('A', 'u_diff6.png', ylabel=r'$A - A_0$', title='A, x = 6m')
+#  sim.post_process('A', get_data_at_position, pos=0.2)
+#  #  sim_openbf.post_process('A', get_data_at_position, pos=0.2)
+#  sim.plot_quantity('A', 'u_diff6.png', ylabel=r'$A - A_0$', title='A, x = 6m')
 
 #  sim.plot_quantity_compare(sim_openbf, 0, 'A', 'u_diff6.png', ylabel=r'$A - A_0$', title='A, x = 6m')
 #
@@ -142,9 +142,9 @@ sim.plot_quantity('A', 'u_diff6.png', ylabel=r'$A - A_0$', title='A, x = 6m')
 #  sim_openbf.post_process('A', get_data_at_position, pos=2.0)
 #  sim.plot_quantity_compare(sim_openbf, 0, 'A', 'u_diff.png', ylabel=r'$A - A_0$', title='A, x = 2m')
 #
-#  sim.post_process('A', get_data_at_position, pos=0.0)
-#  sim_openbf.post_process('A', get_data_at_position, pos=0.0)
-#  sim.plot_quantity_compare(sim_openbf, 0, 'A', 'A_diff.png', ylabel=r'$A - A_0$', title='A, x = 0m')
+sim.post_process('A', get_data_at_position, pos=0.1)
+sim_openbf.post_process('A', get_data_at_position, pos=0.1)
+sim.plot_quantity_compare(sim_openbf, 0, 'A', 'A.png', ylabel=r'$A - A_0$', title='A, x = 0m')
 
 #  sim.post_process('A', get_data_at_position, relative_change, pos=4.0)
 #  sim_openbf.post_process('A', get_data_at_position, relative_change, pos=4.0)

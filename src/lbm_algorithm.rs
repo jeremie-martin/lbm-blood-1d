@@ -14,6 +14,7 @@ pub trait Compute {
 
     /// Computes the equilibrium populations
     fn FEQ(&self, A: &f64, u: &f64) -> (f64, f64, f64);
+    fn FNEQ(&self, A: &f64, u: &f64, f: (&f64, &f64, &f64)) -> (f64, f64, f64);
     // fn FEQ(&self, v: &Vessel) -> VecDeque<(f64, f64, f64)>;
 
     fn BGK(&self, A: &f64, u: &f64, F: &f64, f: (&f64, &f64, &f64)) -> (f64, f64, f64);
@@ -37,6 +38,18 @@ pub trait Compute {
     /// Computes the forcing term given the current macroscopic quantities
     fn forcing_term(&self, v: &mut Vessel, A_lhs: Option<f64>, A_rhs: Option<f64>);
 
+    fn apply_BC(
+        &self,
+        A_old: f64,
+        u_old: f64,
+        A_apply: f64,
+        u_apply: f64,
+        f: (f64, f64, f64),
+        f2: (f64, f64, f64),
+        alpha: f64,
+    ) -> (f64, f64, f64);
+    fn apply_BC_right(&self, v: &mut Vessel, Q_apply: f64, A_apply: f64);
+
     fn non_reflective<'a>(
         &self,
         v: &'a Vessel,
@@ -45,9 +58,6 @@ pub trait Compute {
         idx_apply: usize,
         alpha: f64,
     ) -> (f64, f64, f64);
-
-    // /// WK3
-    fn wk3(&self, v: &Vessel, wk3: &Wk3) -> (f64, f64);
 }
 
 pub struct AlgoBase {
@@ -67,6 +77,12 @@ impl Compute for AlgoBase {
             (1.0 / 6.0) * A * (1.0 - 3.0 * uc + 3.0 * uc2),
             (1.0 / 6.0) * A * (1.0 + 3.0 * uc + 3.0 * uc2),
         )
+    }
+
+    fn FNEQ(&self, A: &f64, u: &f64, f: (&f64, &f64, &f64)) -> (f64, f64, f64) {
+        let feq = self.FEQ(A, u);
+
+        (f.0 - feq.0, f.1 - feq.1, f.2 - feq.2)
     }
 
     // fn FEQ(&self, v: &Vessel) -> VecDeque<(f64, f64, f64)> {
@@ -225,6 +241,7 @@ impl Compute for AlgoBase {
                 // }
             };
 
+            let AAA = A_derivative;
             let A_derivative = self.consts.CA * A_derivative / (self.consts.Cl);
 
             let cp2 = v.cells.gamma[i] * (v.cells.A[i] * self.consts.CA).sqrt() * 1.5;
@@ -233,15 +250,26 @@ impl Compute for AlgoBase {
                 * (((v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt()) / (2.0 * self.consts.rho))
                     - self.consts.cs2_lat);
 
-            let gamma_profile = 9.0;
-            let F = 2.0
-                * std::f64::consts::PI
-                * (self.consts.mu / self.consts.rho)
-                * (1.0 + 2.0)
-                * v.cells.u[i]
-                * self.consts.Cu;
-            // let F = 8.0 * std::f64::consts::PI * (self.consts.mu / self.consts.rho) * (v.cells.u[i] * self.consts.Cu);
-            v.cells.F[i] = (v.cells.F[i] - F) / self.consts.CF;
+            // v.cells.F[i] = -A_derivative
+            //     * (((v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt())
+            //         / (2.0 * self.consts.rho * self.consts.Cu.powi(2)))
+            //         - self.consts.cs2);
+
+            let gamma_profile = 2.0;
+            let P = ((v.cells.beta[i] * (v.cells.A[i] / v.cells.A0[i]).sqrt()) / (2.0 * v.cells.A[i] * v.consts.CA));
+            let F = 2.0 * (self.consts.nu_lb) * (gamma_profile + 2.0) * (v.cells.u[i]);
+            // let F = 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * (v.cells.u[i] * v.consts.Cu);
+            // let F = v.consts.Ct * 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * v.cells.u[i]
+            //     / (v.consts.Cl * v.consts.Cl);
+            // let F = 8.0 * std::f64::consts::PI * (self.consts.mu / self.consts.rho) * (v.cells.u[i] * self.consts.Ct)
+            //     / (self.consts.Ct);
+            let alpha = (gamma_profile + 2.0) / (gamma_profile + 1.0);
+            v.cells.F[i] = (v.cells.F[i]) / self.consts.CF;
+            // v.cells.F[i] -=
+            //     2.0 * self.consts.Ct * (self.consts.mu / self.consts.rho) * (v.cells.u[i] / v.cells.A[i]) * (9.0 + 2.0)
+            //         / self.consts.Cl.powi(2);
+            v.cells.F[i] -= F;
+            // (self.consts.Ct.powi(2)) * F / self.consts.Cl.powi(3);
 
             // v.cells.F[i] -= 2.0 * (self.consts.mu / self.consts.rho) * (gamma_profile + 2.0) * v.cells.u[i];
             // // v.cells.F[i] = 0.5
@@ -262,6 +290,62 @@ impl Compute for AlgoBase {
         //
         //     A_derivative * ((self.consts.cs2) - (H_derivative))
         // })
+    }
+    fn apply_BC(
+        &self,
+        A_old: f64,
+        u_old: f64,
+        A_apply: f64,
+        u_apply: f64,
+        f: (f64, f64, f64),
+        f2: (f64, f64, f64),
+        alpha: f64,
+    ) -> (f64, f64, f64) {
+        let feq = self.FEQ(&A_old, &u_old);
+        let feqn = self.FEQ(&A_apply, &u_apply);
+
+        (
+            (f.0 - feq.0 + feqn.0) * alpha + f2.0 * (1.0 - alpha),
+            (f.1 - feq.1 + feqn.1) * alpha + f2.1 * (1.0 - alpha),
+            (f.2 - feq.2 + feqn.2) * alpha + f2.2 * (1.0 - alpha),
+        )
+    }
+
+    fn apply_BC_right(&self, v: &mut Vessel, Q_apply: f64, A_apply: f64) {
+        let i = v.x_last;
+        let f = (v.cells.f0[i - 1], v.cells.f1[i - 1], v.cells.f2[i - 1]);
+        let A_apply = v.cells.f0[i] + v.cells.f1[i] + v.cells.f2[i];
+        let u_apply = Q_apply / A_apply;
+
+        // let i = v.x_last;
+        // let A_old = v.cells.A[i];
+        // let u_old = v.cells.u[i];
+        // let u_apply = self.velocity(
+        //     &v.cells.A[i - 1],
+        //     &v.cells.F[i - 1],
+        //     (&v.cells.f0[i - 1], &v.cells.f1[i - 1], &v.cells.f2[i - 1]),
+        // );
+        //
+        // let alpha = 0.5;
+        // (v.cells.f0[i], v.cells.f1[i], v.cells.f2[i]) = self.apply_BC(A_old, u_old, A_apply, u_apply, f, alpha);
+
+        let A_old = f.0 + f.1 + f.2;
+        let u_old = self.velocity(
+            &A_old,
+            &v.cells.F[i - 1],
+            (&v.cells.f0[i - 1], &v.cells.f1[i - 1], &v.cells.f2[i - 1]),
+        );
+        // let A_old = v.cells.A[i - 1];
+        // let u_old = v.cells.u[i - 1];
+        // let u_apply = self.velocity(
+        //     &v.cells.A[i],
+        //     &v.cells.F[i],
+        //     (&v.cells.f0[i], &v.cells.f1[i], &v.cells.f2[i]),
+        // );
+        let f2 = (v.cells.f0[i], v.cells.f1[i], v.cells.f2[i]);
+
+        let alpha = 1.0;
+        (v.cells.f0[i], v.cells.f1[i], v.cells.f2[i]) = self.apply_BC(A_old, u_old, A_apply, u_apply, f, f2, alpha);
     }
 
     fn non_reflective<'a>(
@@ -302,46 +386,5 @@ impl Compute for AlgoBase {
             (f1 - feq.1 + feqn.1) * alpha + f1 * (1.0 - alpha),
             (f2 - feq.2 + feqn.2) * alpha + f2 * (1.0 - alpha),
         )
-    }
-
-    fn wk3(&self, v: &Vessel, wk3: &Wk3) -> (f64, f64) {
-        (0.0, 0.0)
-        // let P = v.cells.beta[v.x_last] * ((v.cells.A[v.x_last] / v.cells.A0[v.x_last]).sqrt() - 1.0);
-        // let Q = v.cells.A[v.x_last] * v.cells.u[v.x_last];
-        //
-        // let Qdt = ((3.0 / 2.0) + v.Q_old[0] - 2.0 * v.Q_old[1] + 0.5 * v.Q_old[2]) / self.consts.dt;
-        //
-        // let P_new =
-        //     P + self.consts.dt * (((1.0 + wk3.r1 / wk3.r2) * Q) + (wk3.c * wk3.r1 * Qdt) - (P / wk3.r2)) / wk3.c;
-        //
-        // (P_new, Q)
-
-        // let aL = 2.0 * v.cells.F[v.x_last - 1] - v.cells.F[v.x_last - 2];
-        // let f0 = v.cells.f0[v.x_last];
-        // let f1 = v.cells.f1[v.x_last];
-        // let f2 = v.cells.f2[v.x_last];
-        // let A0 = v.cells.A0[v.x_last];
-        // let A = v.cells.A[v.x_last];
-        // let beta = v.cells.beta[v.x_last];
-        // let rho = v.cells.rho[v.x_last];
-        // let cpulse = 3.0 * v.cells.gamma[v.x_last] * A.sqrt() * 0.5;
-        // let df1 = f1 - (1.0 / 6.0) * A0;
-        // let df2 = f2 - (1.0 / 6.0) * A0;
-        //
-        // let idx = v.x_last - ((cpulse * self.consts.dt) as usize);
-        // let pressure = v.cells.f2[idx] * ((v.cells.A[idx] / v.cells.A0[idx]).sqrt() - 1.0);
-        // let flow = v.cells.A[idx] * v.cells.u[idx];
-        // let pf = 0.5 * (pressure + wk3.r1 * flow);
-        // let pb = wk3.r2 * self.consts.dt * pf + wk3.r1 * wk3.r2 * wk3.c * (pressure - wk3.r1 * flow);
-        // let pb = pb / ((wk3.r1 + wk3.r2) * self.consts.dt + 2.0 * wk3.r1 * wk3.r2 * wk3.c);
-        // let C0 = (A0 / (self.consts.rho * cpulse));
-        // let q = C0 *
-        //
-        // let _f0 = (4.0 / 6.0) * A0 - 2.0 * df2 + C0 * (pf + pb)
-        //     - (self.consts.dt * aL / 2.0)
-        //     + q;
-        // let _f1 = f2 + (self.consts.dt * aL / 2.0) - q;
-
-        // (_f1, _f1)
     }
 }

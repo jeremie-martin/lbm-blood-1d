@@ -86,15 +86,21 @@ impl Vessel {
 
         let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
         info!("h0 after {}", h0);
+        let k = parse.radius_proximal;
+        let base: f64 = 1000000.0;
+        let m = (parse.radius_distal / parse.radius_proximal).log(base);
+        println!("{} {}", k, m);
 
         for i in 0..x_dim {
-            let i_f = i as f64;
+            let i_f = (i as f64) / (x_last as f64);
 
             // Linear interpolation
-            let radius = slope * i_f * consts.Cl + parse.radius_proximal;
-            let Rm = radius;
+            // let radius = slope * i_f * consts.Cl + parse.radius_proximal;
+            let radius = k * base.powf(m * i_f);
+            // let Rm = radius;
+            // let h0 = Rm * (ah * (bh * Rm).exp() + ch * (dh * Rm).exp());
 
-            cells.A[i] = PI * radius * radius / consts.CA;
+            cells.A[i] = PI * radius * radius / (consts.CA);
             cells.u[i] = 0.0;
 
             cells.f0[i] = (4.0 / 6.0) * cells.A[i];

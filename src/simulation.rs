@@ -20,6 +20,7 @@ use tracing::{event, info, instrument, span, warn, Level}; // This trait adds me
 pub struct VesselBoundary {
     pub A0: f64,
     pub A: f64,
+    pub u: f64,
     pub F: f64,
     pub f: (f64, f64, f64),
 }
@@ -57,7 +58,7 @@ pub struct SimulationSave {
 
 impl Simulation {
     /// Returns a structure ready to be simulated, given the `path` to a .json describing both the simulation parameters and the cardiovascular network.
-    pub fn new(path: &str, dx: f64, time_between_save: f64) -> Simulation {
+    pub fn new(path: &str, dx: f64, time_between_save: f64, fact: f64) -> Simulation {
         let mut parse = SimulationParsing::read_json(&path.to_string());
         info!("Unmarshalled {}", path);
 
@@ -66,7 +67,7 @@ impl Simulation {
 
         let total_time = parse.total_time;
 
-        let consts = Constants::new(&parse, dx);
+        let consts = Constants::new(&parse, dx, fact);
 
         info!("Precomputed constants");
         info!(
@@ -80,6 +81,8 @@ impl Simulation {
 
         let mut vessels: Vec<Vessel> = parse.vessels.iter().map(|v| Vessel::new(&v, consts.clone())).collect();
 
+        warn!("vessel0 beta {}", vessels[0].cells.beta[0]);
+
         let mut sm = SlotMap::with_key();
         let mut sm_soluce = SlotMap::with_key();
 
@@ -87,6 +90,7 @@ impl Simulation {
             v.lhs_give = sm.insert(VesselBoundary {
                 A0: v.cells.A0[0],
                 A: v.cells.A[0],
+                u: v.cells.u[0],
                 F: v.cells.F[0],
                 f: (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]),
             });
@@ -94,6 +98,7 @@ impl Simulation {
             v.rhs_give = sm.insert(VesselBoundary {
                 A0: v.cells.A0[v.x_last],
                 A: v.cells.A[v.x_last],
+                u: v.cells.u[v.x_last],
                 F: v.cells.F[v.x_last],
                 f: (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]),
             });
@@ -160,7 +165,7 @@ impl Simulation {
             };
 
             let A_rhs = match v.children.len() {
-                1 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
+                1 => Some(v.cells.A0[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
                 _ => None,
             };
 
@@ -197,10 +202,12 @@ impl Simulation {
             }
 
             self.sm[v.lhs_give].A = v.cells.A[0];
+            self.sm[v.lhs_give].u = v.cells.u[0];
             self.sm[v.lhs_give].F = v.cells.F[0];
             self.sm[v.lhs_give].f = (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]);
 
             self.sm[v.rhs_give].A = v.cells.A[v.x_last];
+            self.sm[v.rhs_give].u = v.cells.u[v.x_last];
             self.sm[v.rhs_give].F = v.cells.F[v.x_last];
             self.sm[v.rhs_give].f = (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]);
         }
@@ -210,8 +217,18 @@ impl Simulation {
         while self.current_time < 3.3 {
             if (self.current_iter == 0 || self.time_since_last_save >= self.time_between_save) {
                 for v in self.vessels.iter() {
-                    info!("Current time: {:.6}s (iter {})", self.current_time, self.current_iter);
-                    info!("{}: {:?}", v.name, &v.cells.A[..5]);
+                    info!(
+                        "Current time: {:.6}s (iter {}, beta {})",
+                        self.current_time, self.current_iter, v.cells.beta[0]
+                    );
+                    info!(
+                        "{}: {:?}",
+                        v.name,
+                        (&v.cells.A[..5])
+                            .iter()
+                            .map(|x| x * self.consts.CA)
+                            .collect::<Vec<f64>>()
+                    );
                     info!("{}: {:?}", v.name, &v.cells.A[v.x_last - 5..v.x_last]);
                     // info!(
                     //     "{}: {} {} {} {}",
@@ -225,8 +242,20 @@ impl Simulation {
                     let A: Vec<f64> = v.cells.A.iter().step_by(1).map(|&x| x * self.consts.CA).collect();
                     let u: Vec<f64> = v.cells.u.iter().step_by(1).map(|&x| x * self.consts.Cu).collect();
                     // let A: Vec<f64> = zip_map!(v.cells, |(A, u)| A + u); //v.cells.A.iter().step_by(1).map(|&x| x).collect();
-                    info!("A: {:?}", &u[..5]);
-                    info!("A: {:?}", &u[v.x_last - 5..v.x_last]);
+                    info!(
+                        "u: {:?}",
+                        (&v.cells.u[..5])
+                            .iter()
+                            .map(|x| x * self.consts.Cu)
+                            .collect::<Vec<f64>>()
+                    );
+                    info!(
+                        "u: {:?}",
+                        (&v.cells.u[..5])
+                            .iter()
+                            .map(|x| x * self.consts.Cu)
+                            .collect::<Vec<f64>>()
+                    );
 
                     unsafe {
                         A_file.write(std::slice::from_raw_parts(A.as_ptr() as *const u8, A.len() * 8));
@@ -261,13 +290,13 @@ impl Simulation {
             let A_lhs = match v.parent_nb {
                 1 => Some(v.cells.A[0]), //Some(self.sm[v.lhs_recv[0]].A),
                 2 => Some(v.cells.A[0]), //Some(self.sm[v.lhs_recv[0]].A),
-                _ => None,
+                _ => None,               //Some(self.sm[v.lhs_recv[0]].A),
             };
 
             let A_rhs = match v.children.len() {
                 1 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
                 2 => Some(v.cells.A[v.x_last]), //Some(self.sm[v.rhs_recv[0]].A),
-                _ => None,
+                _ => None,                      //Some(self.sm[v.rhs_recv[0]].A),
             };
 
             compute.forcing_term(&mut v, A_lhs, A_rhs);
@@ -287,10 +316,12 @@ impl Simulation {
             });
 
             self.sm[v.lhs_give].A = v.cells.A[0];
+            self.sm[v.lhs_give].u = v.cells.u[0];
             self.sm[v.lhs_give].F = v.cells.F[0];
             self.sm[v.lhs_give].f = (v.cells.f0[0], v.cells.f1[0], v.cells.f2[0]);
 
             self.sm[v.rhs_give].A = v.cells.A[v.x_last];
+            self.sm[v.rhs_give].u = v.cells.u[v.x_last];
             self.sm[v.rhs_give].F = v.cells.F[v.x_last];
             self.sm[v.rhs_give].f = (v.cells.f0[v.x_last], v.cells.f1[v.x_last], v.cells.f2[v.x_last]);
         }
@@ -299,32 +330,53 @@ impl Simulation {
             match v.outflow {
                 Some(Outflow::NonReflective) => (),
                 Some(Outflow::WK3(ref mut wk3)) => {
+                    let (i_f, i_b, i_s) = (v.x_last - 2, v.x_last - 1, v.x_last);
                     let (P, Pn, Q, Qn) = wk3.owo(
-                        v.cells.A[v.x_last] * self.consts.CA,
-                        v.cells.u[v.x_last] * self.consts.Cu,
-                        v.cells.A0[v.x_last] * self.consts.CA,
-                        v.cells.beta[v.x_last],
+                        v.cells.A[i_b] * self.consts.CA,
+                        v.cells.u[i_b] * self.consts.Cu,
+                        v.cells.A0[i_b] * self.consts.CA,
+                        v.cells.beta[i_b],
                         v.consts.Ct,
                     );
 
                     let Qn = Qn / self.consts.CQ;
+                    let Qn = 0.0;
 
-                    let A = v.cells.A0[v.x_last] * ((Pn / v.cells.beta[v.x_last]) + 1.0).powi(2);
-                    let u = Qn / A;
+                    let A = self.consts.CA * v.cells.A0[i_b] * ((Pn / v.cells.beta[i_b]) + 1.0).powi(2);
+                    let A = A / self.consts.CA;
+                    let AAA = A;
+                    // // let Aw = v.cells.A0[i_w];
+                    // // let uw = Qn / v.cells.A0[i_w];
+                    // let uw = Qn / A;
+                    // v.cells.A[i_s] = v.cells.A[i_b];
+                    //
+                    // let q = 0.5;
+                    // let u1 = ((q - 1.0) * v.cells.u[i_b] + uw) / q;
+                    // let u2 = ((q - 1.0) * v.cells.u[i_f] + 2.0 * uw) / (q + 1.0);
+                    // v.cells.u[i_s] = q * u1 + (1.0 - q) * u2;
+                    // let fneq_b = v.cells.f1[i_b] - compute.FEQ(&v.cells.A[i_b], &v.cells.u[i_b]).1;
+                    // let fneq_f = v.cells.f1[i_f] - compute.FEQ(&v.cells.A[i_f], &v.cells.u[i_f]).1;
+                    // let fneq_s = q * fneq_b + (1.0 - q) * fneq_f;
+                    // let f1 = compute.FEQ(&v.cells.A[i_s], &v.cells.u[i_s]).1 + fneq_s;
 
                     wk3.P_old.pop_back();
                     wk3.P_old.push_front(P);
                     wk3.Q_old.pop_back();
                     wk3.Q_old.push_front(Q);
 
-                    let aL = 2.0 * v.cells.F[v.x_last - 1] - v.cells.F[v.x_last - 2];
+                    let aL = 2.0 * v.cells.F[v.x_last] - v.cells.F[v.x_last - 1];
+                    let aL = v.cells.F[v.x_last];
                     let f2 = v.cells.f2[v.x_last - 1]; // Assume already streamed
                     let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
                     let f1 = F + f2 - (Qn / self.consts.c);
+                    // let f1 = 0.5 * (A * (1.0 - u) - v.cells.f0[v.x_last] + 0.5 * aL);
+                    let A = v.cells.A0[v.x_last];
+                    let u = Qn / AAA;
+                    // let f1 = -v.cells.f2[v.x_last] + (1.0 / 3.0) * AAA * (1.0 + 3.0 * (u * u));
+                    v.cells.stress[0] = Qn;
+                    v.cells.stress[1] = AAA;
 
                     self.sm_soluce[v.rhs_f1] = f1;
-                    v.consts.tau = A;
-                    v.cells.stress[0] = u;
                 }
 
                 None => (),
@@ -332,24 +384,46 @@ impl Simulation {
 
             match v.is_inlet {
                 true => {
-                    let mut u = self.inlet.flow_at_time(self.current_time) / self.consts.CQ; // / v.cells.A[0];
+                    let mut Q = self.inlet.flow_at_time(self.current_time) / self.consts.CQ; // / v.cells.A[0];
                     if self.current_time > 1.1 {
-                        u = 0.0;
+                        Q = 0.0;
                     }
-                    u = 0.0;
+                    // v.consts.tau = Q;
 
                     // let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
                     //     - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
                     //     / (1.0 - (u / self.consts.c));
-                    let aL = 2.0 * v.cells.F[1] - v.cells.F[2];
-                    let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
-                        - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
-                        + u / self.consts.c;
+                    let aL = 2.0 * v.cells.F[2] - v.cells.F[1];
+                    let aL = v.cells.F[0];
+                    // // let A = (2.0 * v.cells.f1[1] + v.cells.f0[0]
+                    // //     - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c))
+                    // //     + u / self.consts.c;
+                    //
+                    // // let A = 0.15 * v.cells.A0[0] + 0.85 * v.cells.A[0];
+                    let A = v.cells.A[1];
+                    // let u = Q / A;
+                    // let feq = compute.FEQ(&A, &u);
+                    // let A = v.cells.A[0];
+                    // let u = v.cells.u[0];
+                    // let feq2 = compute.FEQ(&A, &u);
+                    // // let f2 = 0.5 * (A * (u + 1.0) - v.cells.f0[0] - 0.5 * v.cells.F[0]);
+                    // let f2 = v.cells.f1[1] + feq2.2 - feq2.1;
 
-                    // v.cells.A[0] = A;
+                    // let (i_s, i_b, i_f) = (0, 1, 2);
+                    // let uw = Q / A;
+                    // v.cells.A[i_s] = v.cells.A[i_b];
+                    //
+                    // let q = 0.5;
+                    // let u1 = ((q - 1.0) * v.cells.u[i_b] + uw) / q;
+                    // let u2 = ((q - 1.0) * v.cells.u[i_f] + 2.0 * uw) / (q + 1.0);
+                    // v.cells.u[i_s] = q * u1 + (1.0 - q) * u2;
+                    // let fneq_b = v.cells.f2[i_b] - compute.FEQ(&v.cells.A[i_b], &v.cells.u[i_b]).2;
+                    // let fneq_f = v.cells.f2[i_f] - compute.FEQ(&v.cells.A[i_f], &v.cells.u[i_f]).2;
+                    // let fneq_s = q * fneq_b + (1.0 - q) * fneq_f;
+                    // let f2 = compute.FEQ(&v.cells.A[i_s], &v.cells.u[i_s]).2 + fneq_s;
 
-                    self.sm_soluce[v.lhs_f2_recv] =
-                        v.cells.f1[1] + (u / self.consts.c) - (v.cells.F[0] * self.consts.dt) / (2.0 * self.consts.c);
+                    let f2 = Q + v.cells.f1[1] - 0.5 * (v.consts.dt / (2.0 * v.consts.c)) * aL;
+                    self.sm_soluce[v.lhs_f2_recv] = f2;
 
                     // let f1 = v.cells.f1[1]; // Assume already streamed
                     // let F = ((self.consts.dt * aL) / (2.0 * self.consts.c));
@@ -413,6 +487,10 @@ impl Simulation {
 
             v.cells.f1.pop_front().unwrap();
             v.cells.f1.push_back(self.sm_soluce[v.rhs_f1]);
+
+            let Q_apply = v.cells.stress[0];
+            let A_apply = v.cells.stress[1];
+            // compute.apply_BC_right(v, Q_apply, A_apply);
             // match v.outflow {
             //     None => (),
             //     Some(_) => {

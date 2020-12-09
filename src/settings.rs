@@ -26,4 +26,7 @@ pub struct Settings {
     /// Space step [m]
     #[structopt(long, default_value = "0.01")]
     pub dx: f64,
+
+    #[structopt(long, default_value = "16.666")]
+    pub fact: f64,
 }
